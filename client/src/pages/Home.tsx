@@ -1,249 +1,323 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Satellite, TrendingUp, DollarSign, Zap, FileText, Wrench } from "lucide-react";
 import { Link } from "wouter";
+import { ArrowRight, Radio, Mail, ExternalLink } from "lucide-react";
 
 const categories = [
-  {
-    icon: TrendingUp,
-    name: "Governance & Treasury",
-    description: "Proposal outcomes, treasury allocations, and governance votes that move capital.",
-  },
-  {
-    icon: DollarSign,
-    name: "Grant Programs",
-    description: "Grant round outcomes, milestone completions, program retrospectives, and funding data.",
-  },
-  {
-    icon: Satellite,
-    name: "Funding Opportunities",
-    description: "Active programs accepting applications. Grant rounds, ecosystem funds, RFPs, and bounties.",
-  },
-  {
-    icon: Zap,
-    name: "Incentives",
-    description: "Performance-based reward programs and liquidity incentives with distribution updates.",
-  },
-  {
-    icon: FileText,
-    name: "Research & Analysis",
-    description: "Reports and analysis on funding mechanisms, quadratic funding, and retroactive public goods.",
-  },
-  {
-    icon: Wrench,
-    name: "Tools & Infrastructure",
-    description: "Platforms and resources that support the grants ecosystem and help builders find funding.",
-  },
+  { name: "Governance & Treasury", icon: "🏛️" },
+  { name: "Grant Programs", icon: "💰" },
+  { name: "Funding Opportunities", icon: "🚀" },
+  { name: "Incentives", icon: "⚡" },
+  { name: "Research & Analysis", icon: "📊" },
+  { name: "Tools & Infrastructure", icon: "🛠️" },
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-          style={{ backgroundImage: "url('/images/hero_satellite_array.png')" }}
-        />
-        
-        {/* Grid Pattern Overlay */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-30" />
-        
-        {/* Content */}
-        <div className="relative z-10 container text-center px-4 py-20">
-          <div className="inline-flex items-center gap-2 mb-6 text-primary">
-            <Satellite className="w-8 h-8" />
-            <span className="text-sm font-mono tracking-wider">SIGNAL ACTIVE</span>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto flex items-center justify-between h-16 px-4">
+          <Link href="/">
+            <a className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-10 w-auto" />
+              <span className="font-display text-xl font-bold">
+                <span className="text-orange-500">Crypto</span>{" "}
+                <span className="text-foreground">Grant</span>{" "}
+                <span className="text-orange-500">Wire</span>
+              </span>
+            </a>
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/">
+              <a className="text-sm hover:text-orange-500 transition-colors">Home</a>
+            </Link>
+            <Link href="/archive">
+              <a className="text-sm hover:text-orange-500 transition-colors">Archive</a>
+            </Link>
+            <Link href="/contact">
+              <a className="text-sm hover:text-orange-500 transition-colors">Contact</a>
+            </Link>
           </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gradient">
-            Sov's Crypto Grant Wire
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        style={{
+          backgroundImage: "url(/cosmic_space_hero.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/80" />
+
+        <div className="relative z-10 container mx-auto px-4 text-center pt-24 pb-16">
+          {/* Signal Active Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-8 animate-pulse">
+            <Radio className="w-4 h-4 text-orange-500" />
+            <span className="text-sm font-mono text-orange-500 uppercase tracking-wider">
+              Signal Active
+            </span>
+          </div>
+
+          {/* Main Heading */}
+          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            <span className="text-orange-500">Crypto</span>{" "}
+            <span className="text-foreground">Grant</span>{" "}
+            <span className="text-orange-500">Wire</span>
           </h1>
-          
+
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto">
             Curated intelligence on crypto grants and funding
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              size="lg" 
-              className="glow-orange text-lg px-8 py-6"
-              asChild
+
+          {/* Simple Text Links */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 text-lg">
+            <a
+              href="https://sovereignsignal.substack.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-orange-500 transition-colors group"
             >
-              <a href="https://sovereignsignal.substack.com" target="_blank" rel="noopener noreferrer">
-                📰 Weekly Report
-              </a>
-            </Button>
-            
-            <Button 
-              size="lg" 
-              variant="secondary"
-              className="glow-cyan text-lg px-8 py-6"
-              asChild
+              <Mail className="w-5 h-5 group-hover:text-orange-500" />
+              <span>Weekly Report</span>
+              <ExternalLink className="w-4 h-4 opacity-50" />
+            </a>
+            <span className="hidden sm:block text-muted-foreground/30">|</span>
+            <a
+              href="https://t.me/sovereignsignal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-cyan-400 transition-colors group"
             >
-              <a href="https://t.me/cryptograntwire" target="_blank" rel="noopener noreferrer">
-                ⚡ Real-Time Feed
-              </a>
-            </Button>
+              <Radio className="w-5 h-5 group-hover:text-cyan-400" />
+              <span>Real-Time Feed</span>
+              <ExternalLink className="w-4 h-4 opacity-50" />
+            </a>
           </div>
+
+          {/* Archive Link */}
+          <Link href="/archive">
+            <a className="inline-flex items-center gap-2 text-sm text-muted-foreground/70 hover:text-orange-500 transition-colors">
+              Browse Archive
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </Link>
         </div>
       </section>
 
       {/* What We Cover Section */}
-      <section className="py-20 bg-card">
-        <div className="container">
-          <h2 className="text-4xl font-bold text-center mb-4">What We Cover</h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            The Grant Wire monitors DAO treasury decisions, grant program updates, funding opportunities, and ecosystem developments.
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              return (
-                <Card 
-                  key={category.name}
-                  className="p-6 hover:border-primary transition-colors bg-background/50 backdrop-blur"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
-                      <p className="text-sm text-muted-foreground">{category.description}</p>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
+      <section className="py-24 relative">
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: "url(/cosmic_space_dark.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+          }}
+        />
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
+              What We Cover
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Tracking crypto grant opportunities across six key categories
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {categories.map((category, index) => (
+              <div
+                key={index}
+                className="group relative bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10"
+              >
+                <div className="text-5xl mb-4">{category.icon}</div>
+                <h3 className="font-display text-xl font-semibold mb-2 group-hover:text-orange-500 transition-colors">
+                  {category.name}
+                </h3>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* How to Follow Section */}
-      <section className="py-20">
-        <div className="container">
-          <h2 className="text-4xl font-bold text-center mb-12">How to Follow</h2>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="p-8 bg-card border-2 hover:border-primary transition-colors">
-              <div className="text-4xl mb-4">📰</div>
-              <h3 className="text-2xl font-bold mb-4">Weekly Report</h3>
+      {/* Distribution Channels Section */}
+      <section className="py-24 bg-card/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
+              Stay Updated
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Get grant wire intelligence delivered through your preferred channel
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Substack Card */}
+            <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/20 rounded-2xl p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Mail className="w-8 h-8 text-orange-500" />
+                <h3 className="font-display text-2xl font-bold">Weekly Report</h3>
+              </div>
               <p className="text-muted-foreground mb-6">
-                Every Friday, a curated summary of the week's most important funding developments on Substack.
+                Comprehensive weekly roundup of crypto grant opportunities, funding trends, and analysis delivered to your inbox.
               </p>
-              <Button asChild className="w-full">
-                <a href="https://sovereignsignal.substack.com" target="_blank" rel="noopener noreferrer">
-                  Subscribe on Substack
-                </a>
-              </Button>
-            </Card>
-            
-            <Card className="p-8 bg-card border-2 hover:border-secondary transition-colors">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-2xl font-bold mb-4">Real-Time Feed</h3>
+              <a
+                href="https://sovereignsignal.substack.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-orange-500 hover:text-orange-400 font-medium transition-colors"
+              >
+                Subscribe on Substack
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+
+            {/* Telegram Card */}
+            <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20 rounded-2xl p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <Radio className="w-8 h-8 text-cyan-500" />
+                <h3 className="font-display text-2xl font-bold">Real-Time Feed</h3>
+              </div>
               <p className="text-muted-foreground mb-6">
-                The Telegram channel delivers updates throughout the week as they happen.
+                Instant alerts on new grant announcements, funding opportunities, and breaking news in the crypto grants space.
               </p>
-              <Button asChild variant="secondary" className="w-full">
-                <a href="https://t.me/cryptograntwire" target="_blank" rel="noopener noreferrer">
-                  Join Telegram
-                </a>
-              </Button>
-            </Card>
+              <a
+                href="https://t.me/sovereignsignal"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-cyan-500 hover:text-cyan-400 font-medium transition-colors"
+              >
+                Join Telegram Channel
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* What We Don't Cover Section */}
-      <section className="py-20 bg-card">
-        <div className="container max-w-3xl">
-          <h2 className="text-3xl font-bold text-center mb-8">What We Don't Cover</h2>
-          <div className="space-y-3 text-muted-foreground">
-            <p className="flex items-start gap-3">
-              <span className="text-destructive mt-1">✕</span>
-              <span><strong>VC fundraises</strong> — Seed rounds, Series A, etc. are out of scope</span>
+      {/* Newsletter Signup Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: "url(/cosmic_space_dark.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+          }}
+        />
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
+              Never Miss an Opportunity
+            </h2>
+            <p className="text-muted-foreground mb-8">
+              Subscribe to get weekly grant wire summaries delivered to your inbox
             </p>
-            <p className="flex items-start gap-3">
-              <span className="text-destructive mt-1">✕</span>
-              <span><strong>Product launches</strong> — New protocols or features unless tied to funding programs</span>
-            </p>
-            <p className="flex items-start gap-3">
-              <span className="text-destructive mt-1">✕</span>
-              <span><strong>General crypto news</strong> — Price action, exchange listings, regulatory news</span>
-            </p>
-            <p className="flex items-start gap-3">
-              <span className="text-destructive mt-1">✕</span>
-              <span><strong>Job postings</strong> — Unless part of a grants/ecosystem program</span>
-            </p>
+            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8">
+              <iframe
+                src="https://sovereignsignal.substack.com/embed"
+                width="100%"
+                height="320"
+                style={{ border: "none", background: "transparent" }}
+                frameBorder="0"
+                scrolling="no"
+                title="Substack Newsletter Signup"
+              />
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container text-center">
-          <h2 className="text-4xl font-bold mb-6">Start Tracking Funding Intelligence</h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Browse the complete archive of grant wire entries, search by category, and discover funding opportunities.
-          </p>
-          <Button size="lg" asChild className="text-lg px-8 py-6">
-            <Link href="/archive">
-              Browse Archive →
-            </Link>
-          </Button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border bg-card">
-        <div className="container">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
+      <footer className="border-t border-border py-12 bg-card/30">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Satellite className="w-5 h-5 text-primary" />
-                Grant Wire
-              </h3>
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-8 w-auto" />
+                <span className="font-display text-lg font-bold">
+                  <span className="text-orange-500">Crypto</span> Grant Wire
+                </span>
+              </div>
               <p className="text-sm text-muted-foreground">
-                Curated intelligence on crypto grants and funding opportunities.
+                Curated intelligence on crypto grants and funding
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Navigation</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
-                <li><Link href="/archive" className="text-muted-foreground hover:text-primary transition-colors">Archive</Link></li>
-                <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
-              </ul>
+              <div className="flex flex-col gap-2">
+                <Link href="/">
+                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                    Home
+                  </a>
+                </Link>
+                <Link href="/archive">
+                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                    Archive
+                  </a>
+                </Link>
+                <Link href="/contact">
+                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                    Contact
+                  </a>
+                </Link>
+              </div>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Connect</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="https://twitter.com/sovereignsignal" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    𝕏 @sovereignsignal
-                  </a>
-                </li>
-                <li>
-                  <a href="https://t.me/cryptograntwire" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    📡 Telegram
-                  </a>
-                </li>
-                <li>
-                  <a href="https://sovereignsignal.substack.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    📰 Substack
-                  </a>
-                </li>
-              </ul>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="https://x.com/sovereignsignal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
+                >
+                  𝕏 @sovereignsignal
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                <a
+                  href="https://t.me/sovereignsignal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
+                >
+                  📡 Telegram
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                <a
+                  href="https://sovereignsignal.substack.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
+                >
+                  📰 Substack
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
           </div>
-          
-          <div className="text-center text-sm text-muted-foreground pt-8 border-t border-border">
-            <p>Curated by Sov • {new Date().getFullYear()}</p>
+
+          <div className="border-t border-border pt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Curated by{" "}
+              <a
+                href="https://x.com/sovereignsignal"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:text-orange-400 transition-colors"
+              >
+                Sov
+              </a>
+            </p>
           </div>
         </div>
       </footer>

@@ -1,11 +1,57 @@
-import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Satellite, Search, Filter, ExternalLink, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
+import { ExternalLink, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
+
+// Image pool from Notion collection
+const IMAGE_POOL = [
+  "https://cdn.midjourney.com/fdc890c2-be99-4828-b59e-60fd86c5bec2/0_0.png",
+  "https://cdn.midjourney.com/fdc890c2-be99-4828-b59e-60fd86c5bec2/0_1.png",
+  "https://cdn.midjourney.com/fdc890c2-be99-4828-b59e-60fd86c5bec2/0_2.png",
+  "https://cdn.midjourney.com/fdc890c2-be99-4828-b59e-60fd86c5bec2/0_3.png",
+  "https://cdn.midjourney.com/aee194ba-a44c-49a8-a039-746426c285f9/0_1.png",
+  "https://cdn.midjourney.com/08bbceb4-283a-4bfb-90e7-d345f9ff2755/0_2.png",
+  "https://cdn.midjourney.com/aee194ba-a44c-49a8-a039-746426c285f9/0_2.png",
+  "https://cdn.midjourney.com/aee194ba-a44c-49a8-a039-746426c285f9/0_3.png",
+  "https://cdn.midjourney.com/7de67be0-ce2c-4da8-a501-ae331107e35b/0_3.png",
+  "https://cdn.midjourney.com/08bbceb4-283a-4bfb-90e7-d345f9ff2755/0_1.png",
+  "https://cdn.midjourney.com/f06fdaa1-51b5-4d74-9ec8-e563e2fd52bb/0_3.png",
+  "https://cdn.midjourney.com/f06fdaa1-51b5-4d74-9ec8-e563e2fd52bb/0_2.png",
+  "https://cdn.midjourney.com/f06fdaa1-51b5-4d74-9ec8-e563e2fd52bb/0_1.png",
+  "https://cdn.midjourney.com/f3e6bc70-4784-4691-82ae-14d5818776f0/0_3.png",
+  "https://cdn.midjourney.com/f3e6bc70-4784-4691-82ae-14d5818776f0/0_2.png",
+  "https://cdn.midjourney.com/f3e6bc70-4784-4691-82ae-14d5818776f0/0_0.png",
+  "https://cdn.midjourney.com/8d6042f6-0a63-4c9f-9218-d1f81a0db086/0_3.png",
+  "https://cdn.midjourney.com/8d6042f6-0a63-4c9f-9218-d1f81a0db086/0_1.png",
+  "https://cdn.midjourney.com/0d5a6030-f471-41ca-b549-be38c59cfd74/0_3.png",
+  "https://cdn.midjourney.com/c87093cf-b950-4de1-a943-c061177993f8/0_2.png",
+  "https://cdn.midjourney.com/d84ec444-d173-49cb-af36-5a17f6ae4626/0_3.png",
+  "https://cdn.midjourney.com/a0bf2a48-173c-49b3-be70-d4841963f458/0_2.png",
+  "https://cdn.midjourney.com/a0bf2a48-173c-49b3-be70-d4841963f458/0_1.png",
+  "https://cdn.midjourney.com/26aec23d-2cf9-410f-90fd-d23435509fe6/0_3.png",
+  "https://cdn.midjourney.com/26aec23d-2cf9-410f-90fd-d23435509fe6/0_1.png",
+  "https://cdn.midjourney.com/26aec23d-2cf9-410f-90fd-d23435509fe6/0_0.png",
+  "https://cdn.midjourney.com/471d4b10-2d8f-4720-96f6-2767311b1ea0/0_3.png",
+  "https://cdn.midjourney.com/471d4b10-2d8f-4720-96f6-2767311b1ea0/0_0.png",
+  "https://cdn.midjourney.com/092c2853-2838-4944-9164-cab7fdc68c72/0_0.png",
+  "https://cdn.midjourney.com/992e4247-8723-4f26-ac80-208d98fc388b/0_1.png",
+];
+
+// Function to get a random image for an entry (deterministic based on entry ID)
+function getEntryImage(entryId: number): string {
+  return IMAGE_POOL[entryId % IMAGE_POOL.length];
+}
 
 export default function Archive() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -13,186 +59,164 @@ export default function Archive() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
-  // Fetch categories
-  const { data: categories } = trpc.grants.categories.useQuery();
-
-  // Fetch entries with filters
-  const { data, isLoading, error } = trpc.grants.list.useQuery({
-    search: searchQuery || undefined,
-    category: selectedCategory !== "all" ? selectedCategory : undefined,
+  const { data, isLoading } = trpc.grants.list.useQuery({
+    search: searchQuery,
+    category: selectedCategory === "all" ? undefined : selectedCategory,
     page: currentPage,
     pageSize,
   });
 
   const entries = data?.entries || [];
-  const totalPages = data?.totalPages || 1;
-  const total = data?.total || 0;
-
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-    setCurrentPage(1);
-  };
+  const totalCount = data?.total || 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-50 backdrop-blur">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto flex items-center justify-between h-16 px-4">
+          <Link href="/">
+            <a className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-10 w-auto" />
+              <span className="font-display text-xl font-bold">
+                <span className="text-orange-500">Crypto</span>{" "}
+                <span className="text-foreground">Grant</span>{" "}
+                <span className="text-orange-500">Wire</span>
+              </span>
+            </a>
+          </Link>
+          <div className="flex items-center gap-6">
             <Link href="/">
-              <div className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors">
-                <Satellite className="w-6 h-6 text-primary" />
-                <span className="font-bold text-xl">Grant Wire</span>
-              </div>
+              <a className="text-sm hover:text-orange-500 transition-colors">Home</a>
             </Link>
-            
-            <nav className="flex items-center gap-6">
-              <Link href="/" className="text-sm hover:text-primary transition-colors">Home</Link>
-              <Link href="/archive" className="text-sm text-primary font-semibold">Archive</Link>
-              <Link href="/contact" className="text-sm hover:text-primary transition-colors">Contact</Link>
-            </nav>
+            <Link href="/archive">
+              <a className="text-sm hover:text-orange-500 transition-colors">Archive</a>
+            </Link>
+            <Link href="/contact">
+              <a className="text-sm hover:text-orange-500 transition-colors">Contact</a>
+            </Link>
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Main Content */}
-      <main className="flex-1 py-12">
-        <div className="container">
-          <div className="mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient">Grant Wire Archive</h1>
-            <p className="text-xl text-muted-foreground">
-              Search and filter {total.toLocaleString()} grant wire entries
-            </p>
-          </div>
+      {/* Header */}
+      <section className="pt-32 pb-16 bg-gradient-to-b from-card/50 to-background">
+        <div className="container mx-auto px-4">
+          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-center">
+            Grant Wire Archive
+          </h1>
+          <p className="text-center text-muted-foreground text-lg mb-8">
+            Search and filter {totalCount} grant wire entries
+          </p>
 
-          {/* Search and Filters */}
-          <div className="mb-8 space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="Search entries..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <div className="w-full md:w-64">
-                <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-                  <SelectTrigger>
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories?.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Search and Filter */}
+          <div className="flex flex-col md:flex-row gap-4 max-w-3xl mx-auto">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search entries..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-10"
+              />
             </div>
+            <Select
+              value={selectedCategory}
+              onValueChange={(value) => {
+                setSelectedCategory(value);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="Governance & Treasury">Governance & Treasury</SelectItem>
+                <SelectItem value="Grant Programs">Grant Programs</SelectItem>
+                <SelectItem value="Funding Opportunities">Funding Opportunities</SelectItem>
+                <SelectItem value="Incentives">Incentives</SelectItem>
+                <SelectItem value="Research & Analysis">Research & Analysis</SelectItem>
+                <SelectItem value="Tools & Infrastructure">Tools & Infrastructure</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
+      </section>
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      {/* Entries List */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+              <p className="mt-4 text-muted-foreground">Loading entries...</p>
             </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <Card className="p-8 text-center bg-destructive/10 border-destructive">
-              <p className="text-destructive">Failed to load entries. Please try again later.</p>
-            </Card>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && !error && entries.length === 0 && (
-            <Card className="p-12 text-center">
-              <p className="text-muted-foreground text-lg">No entries found matching your criteria.</p>
-              <p className="text-sm text-muted-foreground mt-2">Try adjusting your search or filters.</p>
-            </Card>
-          )}
-
-          {/* Entries List */}
-          {!isLoading && !error && entries.length > 0 && (
-            <div className="space-y-4">
+          ) : entries.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No entries found matching your criteria.</p>
+            </div>
+          ) : (
+            <div className="space-y-6 max-w-5xl mx-auto">
               {entries.map((entry) => (
-                <Card 
+                <Card
                   key={entry.id}
-                  className="p-6 hover:border-primary transition-all bg-card"
+                  className="overflow-hidden hover:border-orange-500/50 transition-all duration-300 bg-card/50 backdrop-blur-sm"
                 >
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-start gap-3 mb-2">
-                        <Link href={`/archive/${entry.slug}`}>
-                          <h3 className="text-xl font-semibold hover:text-primary transition-colors cursor-pointer">
+                  <div className="flex flex-col md:flex-row">
+                    {/* Entry Image */}
+                    <div className="md:w-48 h-48 md:h-auto flex-shrink-0 bg-gradient-to-br from-orange-500/20 to-cyan-500/20 relative overflow-hidden">
+                      <img
+                        src={getEntryImage(entry.id)}
+                        alt={entry.title}
+                        className="w-full h-full object-cover opacity-80"
+                        loading="lazy"
+                      />
+                    </div>
+
+                    {/* Entry Content */}
+                    <div className="flex-1 p-6">
+                      <div className="flex items-start justify-between gap-4 mb-3">
+                        <div>
+                          <h3 className="font-display text-xl font-semibold mb-2 group-hover:text-orange-500 transition-colors">
                             {entry.title}
                           </h3>
-                        </Link>
+                          {entry.publishedAt && (
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(entry.publishedAt), "MMM d, yyyy")}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-3">
-                        {entry.category && (
-                          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                            {entry.category}
-                          </span>
-                        )}
-                        {entry.publishedAt && (
-                          <span>
-                            {new Date(entry.publishedAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {entry.content && (
-                        <p className="text-muted-foreground line-clamp-2">
-                          {entry.content}
-                        </p>
+
+                      {entry.category && (
+                        <span className="inline-block px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-medium mb-3">
+                          {entry.category}
+                        </span>
                       )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {entry.sourceUrl && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          asChild
-                        >
-                          <a 
-                            href={entry.sourceUrl} 
-                            target="_blank" 
+
+                      <div className="flex items-center gap-3 mt-4">
+                        {entry.sourceUrl && (
+                          <a
+                            href={entry.sourceUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2"
+                            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-orange-500 transition-colors"
                           >
-                            Source
                             <ExternalLink className="w-4 h-4" />
+                            Source
                           </a>
-                        </Button>
-                      )}
-                      
-                      <Button 
-                        size="sm"
-                        asChild
-                      >
+                        )}
                         <Link href={`/archive/${entry.slug}`}>
-                          View
+                          <a className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 font-medium transition-colors">
+                            View
+                          </a>
                         </Link>
-                      </Button>
+                      </div>
                     </div>
                   </div>
                 </Card>
@@ -201,16 +225,18 @@ export default function Archive() {
           )}
 
           {/* Pagination */}
-          {!isLoading && !error && totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-12">
               <Button
                 variant="outline"
-                disabled={currentPage === 1}
+                size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
               >
+                <ChevronLeft className="w-4 h-4" />
                 Previous
               </Button>
-              
+
               <div className="flex items-center gap-2">
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   let pageNum;
@@ -223,7 +249,7 @@ export default function Archive() {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
                   return (
                     <Button
                       key={pageNum}
@@ -236,66 +262,104 @@ export default function Archive() {
                   );
                 })}
               </div>
-              
+
               <Button
                 variant="outline"
-                disabled={currentPage === totalPages}
+                size="sm"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
               >
                 Next
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           )}
         </div>
-      </main>
+      </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border bg-card">
-        <div className="container">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
+      <footer className="border-t border-border py-12 bg-card/30 mt-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Satellite className="w-5 h-5 text-primary" />
-                Grant Wire
-              </h3>
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-8 w-auto" />
+                <span className="font-display text-lg font-bold">
+                  <span className="text-orange-500">Crypto</span> Grant Wire
+                </span>
+              </div>
               <p className="text-sm text-muted-foreground">
-                Curated intelligence on crypto grants and funding opportunities.
+                Curated intelligence on crypto grants and funding
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Navigation</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link></li>
-                <li><Link href="/archive" className="text-muted-foreground hover:text-primary transition-colors">Archive</Link></li>
-                <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
-              </ul>
+              <div className="flex flex-col gap-2">
+                <Link href="/">
+                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                    Home
+                  </a>
+                </Link>
+                <Link href="/archive">
+                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                    Archive
+                  </a>
+                </Link>
+                <Link href="/contact">
+                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                    Contact
+                  </a>
+                </Link>
+              </div>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-4">Connect</h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a href="https://twitter.com/sovereignsignal" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    𝕏 @sovereignsignal
-                  </a>
-                </li>
-                <li>
-                  <a href="https://t.me/cryptograntwire" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    📡 Telegram
-                  </a>
-                </li>
-                <li>
-                  <a href="https://sovereignsignal.substack.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-                    📰 Substack
-                  </a>
-                </li>
-              </ul>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="https://x.com/sovereignsignal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
+                >
+                  𝕏 @sovereignsignal
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                <a
+                  href="https://t.me/sovereignsignal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
+                >
+                  📡 Telegram
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+                <a
+                  href="https://sovereignsignal.substack.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
+                >
+                  📰 Substack
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
             </div>
           </div>
-          
-          <div className="text-center text-sm text-muted-foreground pt-8 border-t border-border">
-            <p>Curated by Sov • {new Date().getFullYear()}</p>
+
+          <div className="border-t border-border pt-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Curated by{" "}
+              <a
+                href="https://x.com/sovereignsignal"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-500 hover:text-orange-400 transition-colors"
+              >
+                Sov
+              </a>
+            </p>
           </div>
         </div>
       </footer>

@@ -25,7 +25,7 @@ export default function Entry() {
           <div className="container py-4">
             <Link href="/">
               <div className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors">
-                <Satellite className="w-6 h-6 text-primary" />
+                <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-10 w-auto" />
                 <span className="font-bold text-xl">Grant Wire</span>
               </div>
             </Link>
@@ -58,7 +58,7 @@ export default function Entry() {
           <div className="flex items-center justify-between">
             <Link href="/">
               <div className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors">
-                <Satellite className="w-6 h-6 text-primary" />
+                <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-10 w-auto" />
                 <span className="font-bold text-xl">Grant Wire</span>
               </div>
             </Link>
