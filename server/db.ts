@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, like, and, gte, lte, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, grantEntries, InsertGrantEntry, GrantEntry } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,142 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Upsert a grant entry (insert or update based on notionId)
+ */
+export async function upsertGrantEntry(entry: InsertGrantEntry): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot upsert grant entry: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(grantEntries).values(entry).onDuplicateKeyUpdate({
+      set: {
+        title: entry.title,
+        slug: entry.slug,
+        category: entry.category,
+        content: entry.content,
+        sourceUrl: entry.sourceUrl,
+        publishedAt: entry.publishedAt,
+        updatedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error("[Database] Failed to upsert grant entry:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all grant entries with optional filters
+ */
+export async function getGrantEntries(params?: {
+  search?: string;
+  category?: string;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+  offset?: number;
+}): Promise<GrantEntry[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get grant entries: database not available");
+    return [];
+  }
+
+  const conditions = [];
+  
+  if (params?.search) {
+    conditions.push(like(grantEntries.title, `%${params.search}%`));
+  }
+  
+  if (params?.category) {
+    conditions.push(eq(grantEntries.category, params.category));
+  }
+  
+  if (params?.startDate) {
+    conditions.push(gte(grantEntries.publishedAt, params.startDate));
+  }
+  
+  if (params?.endDate) {
+    conditions.push(lte(grantEntries.publishedAt, params.endDate));
+  }
+
+  let query = db
+    .select()
+    .from(grantEntries)
+    .orderBy(desc(grantEntries.publishedAt));
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  if (params?.limit) {
+    query = query.limit(params.limit) as any;
+  }
+
+  if (params?.offset) {
+    query = query.offset(params.offset) as any;
+  }
+
+  return await query;
+}
+
+/**
+ * Get a single grant entry by slug
+ */
+export async function getGrantEntryBySlug(slug: string): Promise<GrantEntry | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get grant entry: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(grantEntries).where(eq(grantEntries.slug, slug)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Count total grant entries with optional filters
+ */
+export async function countGrantEntries(params?: {
+  search?: string;
+  category?: string;
+  startDate?: Date;
+  endDate?: Date;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot count grant entries: database not available");
+    return 0;
+  }
+
+  const conditions = [];
+  
+  if (params?.search) {
+    conditions.push(like(grantEntries.title, `%${params.search}%`));
+  }
+  
+  if (params?.category) {
+    conditions.push(eq(grantEntries.category, params.category));
+  }
+  
+  if (params?.startDate) {
+    conditions.push(gte(grantEntries.publishedAt, params.startDate));
+  }
+  
+  if (params?.endDate) {
+    conditions.push(lte(grantEntries.publishedAt, params.endDate));
+  }
+
+  let query = db.select().from(grantEntries);
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  const result = await query;
+  return result.length;
+}
