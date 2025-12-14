@@ -76,3 +76,4 @@
 - [x] Change View button to link directly to source URL instead of entry page
 - [x] Remove unused Entry page component and route
 - [x] Change pagination from 27 to 9 entries per page (3x3 grid)
+- [x] Redesign hero section with logo-centric layout and new background

@@ -60,32 +60,30 @@ export default function Home() {
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
         style={{
-          backgroundImage: "url(/cosmic_space_hero.png)",
+          backgroundImage: "url(/hero-bg-logo.png)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
       >
         {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/50 to-background/80" />
 
         <div className="relative z-10 container mx-auto px-4 text-center pt-24 pb-16">
           {/* Signal Active Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-8 animate-pulse">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 mb-12 animate-pulse">
             <Radio className="w-4 h-4 text-orange-500" />
             <span className="text-sm font-mono text-orange-500 uppercase tracking-wider">
               Signal Active
             </span>
           </div>
 
-          {/* Main Heading */}
-          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight uppercase tracking-tight">
-            <span className="text-orange-500">Crypto</span>{" "}
-            <span className="text-foreground">Grant</span>{" "}
-            <span className="text-orange-500">Wire</span>
-          </h1>
+          {/* Logo */}
+          <div className="mb-8 flex justify-center">
+            <img src="/CGWLogoName.png" alt="Crypto Grant Wire" className="h-24 md:h-32 w-auto" />
+          </div>
 
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-16 max-w-3xl mx-auto">
             Curated intelligence on crypto grants and funding
           </p>
 
