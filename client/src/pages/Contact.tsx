@@ -1,35 +1,9 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Satellite, Mail, Send, Loader2 } from "lucide-react";
+import { Satellite, Mail, Send } from "lucide-react";
 import { Link } from "wouter";
-import { trpc } from "@/lib/trpc";
-import { toast } from "sonner";
 
 export default function Contact() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-
-  const submitMutation = trpc.contact.submit.useMutation({
-    onSuccess: () => {
-      toast.success("Thank you for your submission!");
-      setName("");
-      setEmail("");
-      setMessage("");
-    },
-    onError: () => {
-      toast.error("Failed to submit. Please try again.");
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    submitMutation.mutate({ name, email, message });
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -135,63 +109,17 @@ export default function Contact() {
               Share grant program updates, funding opportunities, or ecosystem developments that should be covered in the Grant Wire.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Share details about the grant program, funding opportunity, or development..."
-                  rows={6}
-                  required
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                size="lg" 
-                className="w-full md:w-auto"
-                disabled={submitMutation.isPending}
-              >
-                {submitMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit Tip
-                  </>
-                )}
+            <a
+              href="https://www.notion.so/sovs/13b000c0d59080cf8a88f085c7437552?v=13b000c0d59080d69f72000cca70d4ae"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block"
+            >
+              <Button size="lg" className="w-full md:w-auto">
+                <Send className="w-4 h-4 mr-2" />
+                Submit a Tip
               </Button>
-            </form>
+            </a>
           </Card>
         </div>
       </main>

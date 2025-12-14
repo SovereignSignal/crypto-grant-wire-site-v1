@@ -66,3 +66,4 @@
 - [x] Remove duplicate newsletter subscription section from home page
 - [x] Fix nested anchor tag error on archive page
 - [x] Investigate and fix remaining nested anchor error on archive page (header/footer)
+- [x] Replace contact form with Notion submission form link
