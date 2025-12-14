@@ -104,7 +104,7 @@ export default function Archive() {
             Grant Wire Archive
           </h1>
           <p className="text-center text-muted-foreground text-lg mb-8">
-            Search and filter {totalCount} grant wire entries
+            Search and filter grant wire entries
           </p>
 
           {/* Search and Filter */}
