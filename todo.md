@@ -64,3 +64,4 @@
 - [x] Remove emojis from category cards
 - [x] Add category definitions from Notion site
 - [x] Remove duplicate newsletter subscription section from home page
+- [x] Fix nested anchor tag error on archive page

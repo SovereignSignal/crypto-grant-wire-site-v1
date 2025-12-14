@@ -211,10 +211,11 @@ export default function Archive() {
                             Source
                           </a>
                         )}
-                        <Link href={`/archive/${entry.slug}`}>
-                          <a className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 font-medium transition-colors">
-                            View
-                          </a>
+                        <Link 
+                          href={`/archive/${entry.slug}`}
+                          className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 font-medium transition-colors"
+                        >
+                          View
                         </Link>
                       </div>
                     </div>
