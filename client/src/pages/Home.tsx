@@ -16,25 +16,23 @@ export default function Home() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <Link href="/">
-            <a className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-10 w-auto" />
-              <span className="font-display text-xl font-bold">
-                <span className="text-orange-500">Crypto</span>{" "}
-                <span className="text-foreground">Grant</span>{" "}
-                <span className="text-orange-500">Wire</span>
-              </span>
-            </a>
+          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-10 w-auto" />
+            <span className="font-display text-xl font-bold">
+              <span className="text-orange-500">Crypto</span>{" "}
+              <span className="text-foreground">Grant</span>{" "}
+              <span className="text-orange-500">Wire</span>
+            </span>
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="/">
-              <a className="text-sm hover:text-orange-500 transition-colors">Home</a>
+            <Link href="/" className="text-sm hover:text-orange-500 transition-colors">
+              Home
             </Link>
-            <Link href="/archive">
-              <a className="text-sm hover:text-orange-500 transition-colors">Archive</a>
+            <Link href="/archive" className="text-sm hover:text-orange-500 transition-colors">
+              Archive
             </Link>
-            <Link href="/contact">
-              <a className="text-sm hover:text-orange-500 transition-colors">Contact</a>
+            <Link href="/contact" className="text-sm hover:text-orange-500 transition-colors">
+              Contact
             </Link>
           </div>
         </div>
@@ -99,11 +97,9 @@ export default function Home() {
           </div>
 
           {/* Archive Link */}
-          <Link href="/archive">
-            <a className="inline-flex items-center gap-2 text-sm text-muted-foreground/70 hover:text-orange-500 transition-colors">
-              Browse Archive
-              <ArrowRight className="w-4 h-4" />
-            </a>
+          <Link href="/archive" className="inline-flex items-center gap-2 text-sm text-muted-foreground/70 hover:text-orange-500 transition-colors">
+            Browse Archive
+            <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
@@ -254,20 +250,14 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4">Navigation</h4>
               <div className="flex flex-col gap-2">
-                <Link href="/">
-                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
-                    Home
-                  </a>
+                <Link href="/" className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                  Home
                 </Link>
-                <Link href="/archive">
-                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
-                    Archive
-                  </a>
+                <Link href="/archive" className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                  Archive
                 </Link>
-                <Link href="/contact">
-                  <a className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
-                    Contact
-                  </a>
+                <Link href="/contact" className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
+                  Contact
                 </Link>
               </div>
             </div>

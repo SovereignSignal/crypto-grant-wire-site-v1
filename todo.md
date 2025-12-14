@@ -56,3 +56,6 @@
 - [x] Update navigation to use logo
 - [x] Test new design across all pages
 - [x] Add randomized images from Notion collection to archive entries
+
+## Bug Fixes
+- [x] Fix nested anchor tag errors in navigation components
