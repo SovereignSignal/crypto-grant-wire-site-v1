@@ -79,13 +79,9 @@ export default function Home() {
           </div>
 
           {/* Logo */}
-          <div className="mb-8 flex justify-center">
-            <img src="/CGWLogoName.png" alt="Crypto Grant Wire" className="h-24 md:h-32 w-auto" />
+          <div className="mb-16 flex justify-center">
+            <img src="/CGWLogoName.png" alt="Crypto Grant Wire" className="h-40 md:h-56 lg:h-64 w-auto" />
           </div>
-
-          <p className="text-xl md:text-2xl text-muted-foreground mb-16 max-w-3xl mx-auto">
-            Curated intelligence on crypto grants and funding
-          </p>
 
           {/* Simple Text Links */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 text-lg">

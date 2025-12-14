@@ -77,3 +77,5 @@
 - [x] Remove unused Entry page component and route
 - [x] Change pagination from 27 to 9 entries per page (3x3 grid)
 - [x] Redesign hero section with logo-centric layout and new background
+- [x] Increase logo size in hero section for better prominence
+- [x] Remove gray tagline text from hero section
