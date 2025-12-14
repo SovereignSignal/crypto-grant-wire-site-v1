@@ -2,12 +2,30 @@ import { Link } from "wouter";
 import { ArrowRight, Radio, Mail, ExternalLink } from "lucide-react";
 
 const categories = [
-  { name: "Governance & Treasury", icon: "🏛️" },
-  { name: "Grant Programs", icon: "💰" },
-  { name: "Funding Opportunities", icon: "🚀" },
-  { name: "Incentives", icon: "⚡" },
-  { name: "Research & Analysis", icon: "📊" },
-  { name: "Tools & Infrastructure", icon: "🛠️" },
+  {
+    name: "Governance & Treasury",
+    description: "Proposal outcomes, treasury allocations, and governance votes that move capital."
+  },
+  {
+    name: "Grant Programs",
+    description: "Who got funded and what happened. Grant round outcomes, milestone completions, and program retrospectives."
+  },
+  {
+    name: "Funding Opportunities",
+    description: "Active programs accepting applications. Grant rounds, ecosystem funds, RFPs, and bounties."
+  },
+  {
+    name: "Incentives",
+    description: "Performance-based reward programs and liquidity incentives where rewards follow on-chain activity."
+  },
+  {
+    name: "Research & Analysis",
+    description: "Reports and analysis on funding mechanisms, quadratic funding, retroactive public goods, and token incentive design."
+  },
+  {
+    name: "Tools & Infrastructure",
+    description: "Platforms and resources that support the grants ecosystem. Application tools, funding dashboards, and grant management software."
+  },
 ];
 
 export default function Home() {
@@ -129,12 +147,14 @@ export default function Home() {
             {categories.map((category, index) => (
               <div
                 key={index}
-                className="group relative bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10"
+                className="group relative bg-card/50 backdrop-blur-sm border border-border rounded-xl p-6 hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10"
               >
-                <div className="text-5xl mb-4">{category.icon}</div>
-                <h3 className="font-display text-xl font-semibold mb-2 group-hover:text-orange-500 transition-colors">
+                <h3 className="font-display text-xl font-semibold mb-3 group-hover:text-orange-500 transition-colors">
                   {category.name}
                 </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {category.description}
+                </p>
               </div>
             ))}
           </div>

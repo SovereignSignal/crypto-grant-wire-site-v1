@@ -59,3 +59,7 @@
 
 ## Bug Fixes
 - [x] Fix nested anchor tag errors in navigation components
+
+## UI Improvements
+- [x] Remove emojis from category cards
+- [x] Add category definitions from Notion site
