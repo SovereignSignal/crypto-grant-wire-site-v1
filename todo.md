@@ -68,3 +68,5 @@
 - [x] Investigate and fix remaining nested anchor error on archive page (header/footer)
 - [x] Replace contact form with Notion submission form link
 - [x] Remove entry count from archive page subtitle
+- [x] Redesign archive page to use grid tile layout instead of full-width cards
+- [x] Update hero page typography to match logo font style for consistency

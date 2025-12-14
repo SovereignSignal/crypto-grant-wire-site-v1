@@ -159,63 +159,59 @@ export default function Archive() {
               <p className="text-muted-foreground">No entries found matching your criteria.</p>
             </div>
           ) : (
-            <div className="space-y-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {entries.map((entry) => (
                 <Card
                   key={entry.id}
-                  className="overflow-hidden hover:border-orange-500/50 transition-all duration-300 bg-card/50 backdrop-blur-sm"
+                  className="overflow-hidden hover:border-orange-500/50 transition-all duration-300 bg-card/50 backdrop-blur-sm flex flex-col"
                 >
-                  <div className="flex flex-col md:flex-row">
-                    {/* Entry Image */}
-                    <div className="md:w-48 h-48 md:h-auto flex-shrink-0 bg-gradient-to-br from-orange-500/20 to-cyan-500/20 relative overflow-hidden">
-                      <img
-                        src={getEntryImage(entry.id)}
-                        alt={entry.title}
-                        className="w-full h-full object-cover opacity-80"
-                        loading="lazy"
-                      />
-                    </div>
+                  {/* Entry Image */}
+                  <div className="h-48 bg-gradient-to-br from-orange-500/20 to-cyan-500/20 relative overflow-hidden">
+                    <img
+                      src={getEntryImage(entry.id)}
+                      alt={entry.title}
+                      className="w-full h-full object-cover opacity-80"
+                      loading="lazy"
+                    />
+                  </div>
 
-                    {/* Entry Content */}
-                    <div className="flex-1 p-6">
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div>
-                          <h3 className="font-display text-xl font-semibold mb-2 group-hover:text-orange-500 transition-colors">
-                            {entry.title}
-                          </h3>
-                          {entry.publishedAt && (
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(entry.publishedAt), "MMM d, yyyy")}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                  {/* Entry Content */}
+                  <div className="flex-1 p-5 flex flex-col">
+                    <div className="flex-1">
+                      <h3 className="font-display text-lg font-semibold mb-2 line-clamp-2">
+                        {entry.title}
+                      </h3>
+                      {entry.publishedAt && (
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {format(new Date(entry.publishedAt), "MMM d, yyyy")}
+                        </p>
+                      )}
 
                       {entry.category && (
-                        <span className="inline-block px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-medium mb-3">
+                        <span className="inline-block px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-medium">
                           {entry.category}
                         </span>
                       )}
+                    </div>
 
-                      <div className="flex items-center gap-3 mt-4">
-                        {entry.sourceUrl && (
-                          <a
-                            href={entry.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-orange-500 transition-colors"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                            Source
-                          </a>
-                        )}
-                        <Link 
-                          href={`/archive/${entry.slug}`}
-                          className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 font-medium transition-colors"
+                    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border">
+                      {entry.sourceUrl && (
+                        <a
+                          href={entry.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-orange-500 transition-colors"
                         >
-                          View
-                        </Link>
-                      </div>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Source
+                        </a>
+                      )}
+                      <Link 
+                        href={`/archive/${entry.slug}`}
+                        className="inline-flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-400 font-medium transition-colors"
+                      >
+                        View
+                      </Link>
                     </div>
                   </div>
                 </Card>

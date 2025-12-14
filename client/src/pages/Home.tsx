@@ -79,7 +79,7 @@ export default function Home() {
           </div>
 
           {/* Main Heading */}
-          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight">
+          <h1 className="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight uppercase tracking-tight">
             <span className="text-orange-500">Crypto</span>{" "}
             <span className="text-foreground">Grant</span>{" "}
             <span className="text-orange-500">Wire</span>
