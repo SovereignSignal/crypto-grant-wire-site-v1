@@ -213,18 +213,11 @@ export default function Archive() {
                           href={entry.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-orange-500 transition-colors"
+                          className="inline-flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-400 font-medium transition-colors"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          Source
+                          View
                         </a>
                       )}
-                      <Link 
-                        href={`/archive/${entry.slug}`}
-                        className="inline-flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-400 font-medium transition-colors"
-                      >
-                        View
-                      </Link>
                     </div>
                   </div>
                 </Card>

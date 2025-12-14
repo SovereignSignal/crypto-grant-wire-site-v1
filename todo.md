@@ -73,3 +73,5 @@
 - [x] Update archive pagination to show 27 entries per page (3x9 grid)
 - [x] Add tags field to database schema and Notion sync
 - [x] Display tags on archive entry cards
+- [x] Change View button to link directly to source URL instead of entry page
+- [x] Remove unused Entry page component and route
