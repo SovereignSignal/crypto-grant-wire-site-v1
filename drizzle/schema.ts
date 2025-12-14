@@ -43,6 +43,8 @@ export const grantEntries = mysqlTable("grant_entries", {
   content: text("content"),
   /** Source URL */
   sourceUrl: text("sourceUrl"),
+  /** Tags from Notion (comma-separated) */
+  tags: text("tags"),
   /** Date the entry was published */
   publishedAt: timestamp("publishedAt"),
   /** When this cache entry was created */

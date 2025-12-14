@@ -15,6 +15,13 @@
       "when": 1765668206686,
       "tag": "0001_modern_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1765672813104,
+      "tag": "0002_safe_crystal",
+      "breakpoints": true
     }
   ]
 }

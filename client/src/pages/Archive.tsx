@@ -57,7 +57,7 @@ export default function Archive() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
+  const pageSize = 27;
 
   const { data, isLoading } = trpc.grants.list.useQuery({
     search: searchQuery,
@@ -188,9 +188,22 @@ export default function Archive() {
                       )}
 
                       {entry.category && (
-                        <span className="inline-block px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-medium">
+                        <span className="inline-block px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-500 text-xs font-medium mb-2">
                           {entry.category}
                         </span>
+                      )}
+
+                      {entry.tags && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {entry.tags.split(", ").map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-block px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
 

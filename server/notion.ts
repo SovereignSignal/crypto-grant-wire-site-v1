@@ -19,6 +19,7 @@ export interface NotionEntry {
   category?: string;
   content?: string;
   sourceUrl?: string;
+  tags?: string;
   publishedAt?: Date;
 }
 
@@ -118,6 +119,12 @@ function parseNotionResults(results: any[]): NotionEntry[] {
       sourceUrl = properties.Link.url;
     }
 
+    // Extract tags
+    let tags: string | undefined;
+    if (properties.Tags?.multi_select) {
+      tags = properties.Tags.multi_select.map((tag: any) => tag.name).join(", ");
+    }
+
     // Extract date
     let publishedAt: Date | undefined;
     if (properties["Date Added"]?.date?.start) {
@@ -133,6 +140,7 @@ function parseNotionResults(results: any[]): NotionEntry[] {
       title,
       category,
       sourceUrl,
+      tags,
       publishedAt,
       content: title, // Use title as content for now
     };

@@ -1,0 +1,1 @@
+ALTER TABLE `grant_entries` ADD `tags` text;

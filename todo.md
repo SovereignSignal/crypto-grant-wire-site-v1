@@ -70,3 +70,6 @@
 - [x] Remove entry count from archive page subtitle
 - [x] Redesign archive page to use grid tile layout instead of full-width cards
 - [x] Update hero page typography to match logo font style for consistency
+- [x] Update archive pagination to show 27 entries per page (3x9 grid)
+- [x] Add tags field to database schema and Notion sync
+- [x] Display tags on archive entry cards

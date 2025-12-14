@@ -100,6 +100,12 @@ function parseNotionEntry(page) {
     sourceUrl = properties.Link.url;
   }
 
+  // Extract tags
+  let tags = null;
+  if (properties.Tags?.multi_select) {
+    tags = properties.Tags.multi_select.map(tag => tag.name).join(', ');
+  }
+
   // Extract date
   let publishedAt = null;
   if (properties['Date Added']?.date?.start) {
@@ -124,6 +130,7 @@ function parseNotionEntry(page) {
     category,
     content: title,
     sourceUrl,
+    tags,
     publishedAt,
   };
 }
@@ -148,6 +155,7 @@ async function syncToDatabase(entries) {
           category: entry.category,
           content: entry.content,
           sourceUrl: entry.sourceUrl,
+          tags: entry.tags,
           publishedAt: entry.publishedAt,
           updatedAt: new Date(),
         },
