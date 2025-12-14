@@ -80,3 +80,4 @@
 - [x] Increase logo size in hero section for better prominence
 - [x] Remove gray tagline text from hero section
 - [x] Add "Latest Grant Wires" section to home page showing 3 most recent entries
+- [x] Remove Weekly Report, Real-Time Feed, and Browse Archive links from hero section

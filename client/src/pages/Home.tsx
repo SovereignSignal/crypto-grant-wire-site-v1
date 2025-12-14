@@ -150,40 +150,9 @@ export default function Home() {
           </div>
 
           {/* Logo */}
-          <div className="mb-16 flex justify-center">
+          <div className="flex justify-center">
             <img src="/CGWLogoName.png" alt="Crypto Grant Wire" className="h-40 md:h-56 lg:h-64 w-auto" />
           </div>
-
-          {/* Simple Text Links */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 text-lg">
-            <a
-              href="https://sovereignsignal.substack.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-orange-500 transition-colors group"
-            >
-              <Mail className="w-5 h-5 group-hover:text-orange-500" />
-              <span>Weekly Report</span>
-              <ExternalLink className="w-4 h-4 opacity-50" />
-            </a>
-            <span className="hidden sm:block text-muted-foreground/30">|</span>
-            <a
-              href="https://t.me/sovereignsignal"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-cyan-400 transition-colors group"
-            >
-              <Radio className="w-5 h-5 group-hover:text-cyan-400" />
-              <span>Real-Time Feed</span>
-              <ExternalLink className="w-4 h-4 opacity-50" />
-            </a>
-          </div>
-
-          {/* Archive Link */}
-          <Link href="/archive" className="inline-flex items-center gap-2 text-sm text-muted-foreground/70 hover:text-orange-500 transition-colors">
-            Browse Archive
-            <ArrowRight className="w-4 h-4" />
-          </Link>
         </div>
       </section>
 
