@@ -57,7 +57,7 @@ export default function Archive() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 27;
+  const pageSize = 9;
 
   const { data, isLoading } = trpc.grants.list.useQuery({
     search: searchQuery,
