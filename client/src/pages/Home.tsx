@@ -1,5 +1,76 @@
 import { Link } from "wouter";
-import { ArrowRight, Radio, Mail, ExternalLink } from "lucide-react";
+import { ArrowRight, Radio, Mail, ExternalLink, Calendar } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+
+function LatestEntries() {
+  const { data: entries, isLoading } = trpc.grants.recent.useQuery({ limit: 3 });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-card/50 border border-border rounded-xl p-6 animate-pulse">
+            <div className="h-4 bg-muted rounded w-3/4 mb-4" />
+            <div className="h-3 bg-muted rounded w-1/2 mb-6" />
+            <div className="h-10 bg-muted rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!entries || entries.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground">
+        No entries available yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      {entries.map((entry) => (
+        <div
+          key={entry.id}
+          className="group bg-card/50 backdrop-blur-sm border border-border rounded-xl overflow-hidden hover:border-orange-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10"
+        >
+          <div className="p-6">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+              <Calendar className="w-3 h-3" />
+              <span>{entry.publishedAt ? new Date(entry.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
+            </div>
+            <h3 className="font-display text-lg font-semibold mb-3 group-hover:text-orange-500 transition-colors line-clamp-2">
+              {entry.title}
+            </h3>
+            {entry.category && (
+              <span className="inline-block px-3 py-1 text-xs bg-orange-500/10 text-orange-500 rounded-full mb-4">
+                {entry.category}
+              </span>
+            )}
+            {entry.tags && typeof entry.tags === 'string' && entry.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-4">
+                {entry.tags.split(',').slice(0, 3).map((tag: string, idx: number) => (
+                  <span key={idx} className="text-xs px-2 py-0.5 bg-muted/50 text-muted-foreground rounded">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
+            <a
+              href={entry.sourceUrl || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
+            >
+              View Source
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const categories = [
   {
@@ -155,8 +226,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Distribution Channels Section */}
+      {/* Latest Grant Wires Section */}
       <section className="py-24 bg-card/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">
+              Latest Grant Wires
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Fresh intelligence from the crypto grants ecosystem
+            </p>
+          </div>
+
+          <LatestEntries />
+
+          <div className="text-center mt-12">
+            <Link
+              href="/archive"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 hover:border-orange-500/40 rounded-lg text-orange-500 transition-all duration-300 font-medium"
+            >
+              View All Entries
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Distribution Channels Section */}
+      <section className="py-24">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="font-display text-4xl md:text-5xl font-bold mb-4">

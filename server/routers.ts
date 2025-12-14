@@ -126,6 +126,19 @@ export const appRouter = router({
         "Tools & Infrastructure",
       ];
     }),
+
+    /**
+     * Get most recent grant entries
+     */
+    recent: publicProcedure
+      .input(z.object({ limit: z.number().default(3) }))
+      .query(async ({ input }) => {
+        const entries = await getGrantEntries({
+          limit: input.limit,
+          offset: 0,
+        });
+        return entries;
+      }),
   }),
 
   /**
