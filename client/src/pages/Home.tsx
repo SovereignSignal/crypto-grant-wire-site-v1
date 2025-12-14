@@ -217,40 +217,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Newsletter Signup Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: "url(/cosmic_space_dark.png)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundAttachment: "fixed",
-          }}
-        />
-        <div className="relative z-10 container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-              Never Miss an Opportunity
-            </h2>
-            <p className="text-muted-foreground mb-8">
-              Subscribe to get weekly grant wire summaries delivered to your inbox
-            </p>
-            <div className="bg-card/50 backdrop-blur-sm border border-border rounded-xl p-8">
-              <iframe
-                src="https://sovereignsignal.substack.com/embed"
-                width="100%"
-                height="320"
-                style={{ border: "none", background: "transparent" }}
-                frameBorder="0"
-                scrolling="no"
-                title="Substack Newsletter Signup"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="border-t border-border py-12 bg-card/30">
         <div className="container mx-auto px-4">

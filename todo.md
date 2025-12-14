@@ -63,3 +63,4 @@
 ## UI Improvements
 - [x] Remove emojis from category cards
 - [x] Add category definitions from Notion site
+- [x] Remove duplicate newsletter subscription section from home page
