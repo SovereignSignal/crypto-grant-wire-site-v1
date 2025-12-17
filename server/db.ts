@@ -107,6 +107,7 @@ export async function upsertGrantEntry(entry: InsertGrantEntry): Promise<void> {
         category: entry.category,
         content: entry.content,
         sourceUrl: entry.sourceUrl,
+        tags: entry.tags,
         publishedAt: entry.publishedAt,
         updatedAt: new Date(),
       },
