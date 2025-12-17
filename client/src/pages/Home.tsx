@@ -1,8 +1,7 @@
 import { Link } from "wouter";
 import { ArrowRight, Radio, Mail, ExternalLink, Calendar } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import SiteLayout from "@/components/SiteLayout";
 
 function LatestEntries() {
   const { data: entries, isLoading } = trpc.grants.recent.useQuery({ limit: 3 });
@@ -58,15 +57,17 @@ function LatestEntries() {
                 ))}
               </div>
             )}
-            <a
-              href={entry.sourceUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
-            >
-              View Source
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            {entry.sourceUrl ? (
+              <a
+                href={entry.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
+              >
+                View Source
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            ) : null}
           </div>
         </div>
       ))}
@@ -103,9 +104,7 @@ const categories = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-
+    <SiteLayout includeNavbarOffset={false}>
       {/* Hero Section */}
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
@@ -256,7 +255,6 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </SiteLayout>
   );
 }

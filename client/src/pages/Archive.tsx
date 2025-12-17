@@ -12,8 +12,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { ExternalLink, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import SiteLayout from "@/components/SiteLayout";
 
 // Image pool from Notion collection
 const IMAGE_POOL = [
@@ -82,11 +81,9 @@ export default function Archive() {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-
+    <SiteLayout>
       {/* Header */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-card/50 to-background">
+      <section className="pt-16 pb-16 bg-gradient-to-b from-card/50 to-background">
         <div className="container mx-auto px-4">
           <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-center">
             Grant Wire Archive
@@ -185,14 +182,18 @@ export default function Archive() {
 
                       {entry.tags && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          {entry.tags.split(", ").map((tag, idx) => (
-                            <span
-                              key={idx}
-                              className="inline-block px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                          {entry.tags
+                            .split(",")
+                            .map(tag => tag.trim())
+                            .filter(Boolean)
+                            .map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-block px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs"
+                              >
+                                {tag}
+                              </span>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -270,7 +271,6 @@ export default function Archive() {
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </SiteLayout>
   );
 }

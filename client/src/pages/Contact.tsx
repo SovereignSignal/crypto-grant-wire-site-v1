@@ -1,16 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Mail, Send } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import SiteLayout from "@/components/SiteLayout";
 
 export default function Contact() {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <Navbar />
-
+    <SiteLayout>
       {/* Main Content */}
-      <main className="flex-1 pt-32 pb-12">
+      <main className="flex-1 pt-16 pb-12">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="mb-12">
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">Get in Touch</h1>
@@ -106,7 +103,6 @@ export default function Contact() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+    </SiteLayout>
   );
 }
