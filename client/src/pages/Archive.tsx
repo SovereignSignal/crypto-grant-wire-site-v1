@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "wouter";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { ExternalLink, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 // Image pool from Notion collection
 const IMAGE_POOL = [
@@ -54,10 +55,20 @@ function getEntryImage(entryId: number): string {
 }
 
 export default function Archive() {
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 9;
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const { data, isLoading } = trpc.grants.list.useQuery({
     search: searchQuery,
@@ -72,30 +83,7 @@ export default function Archive() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-10 w-auto" />
-            <span className="font-display text-xl font-bold">
-              <span className="text-orange-500">Crypto</span>{" "}
-              <span className="text-foreground">Grant</span>{" "}
-              <span className="text-orange-500">Wire</span>
-            </span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-sm hover:text-orange-500 transition-colors">
-              Home
-            </Link>
-            <Link href="/archive" className="text-sm hover:text-orange-500 transition-colors">
-              Archive
-            </Link>
-            <Link href="/contact" className="text-sm hover:text-orange-500 transition-colors">
-              Contact
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Header */}
       <section className="pt-32 pb-16 bg-gradient-to-b from-card/50 to-background">
@@ -114,11 +102,8 @@ export default function Archive() {
               <Input
                 type="text"
                 placeholder="Search entries..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -159,6 +144,11 @@ export default function Archive() {
               <p className="text-muted-foreground">No entries found matching your criteria.</p>
             </div>
           ) : (
+            <>
+            {/* Entry count */}
+            <p className="text-sm text-muted-foreground mb-6 text-center">
+              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalCount)} of {totalCount} entries
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {entries.map((entry) => (
                 <Card
@@ -215,7 +205,8 @@ export default function Archive() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-xs text-orange-500 hover:text-orange-400 font-medium transition-colors"
                         >
-                          View
+                          View Source
+                          <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
                     </div>
@@ -223,6 +214,7 @@ export default function Archive() {
                 </Card>
               ))}
             </div>
+            </>
           )}
 
           {/* Pagination */}
@@ -278,86 +270,7 @@ export default function Archive() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-12 bg-card/30 mt-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <img src="/CGWLogoSolo.png" alt="Crypto Grant Wire" className="h-8 w-auto" />
-                <span className="font-display text-lg font-bold">
-                  <span className="text-orange-500">Crypto</span> Grant Wire
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Curated intelligence on crypto grants and funding
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Navigation</h4>
-              <div className="flex flex-col gap-2">
-                <Link href="/" className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
-                  Home
-                </Link>
-                <Link href="/archive" className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
-                  Archive
-                </Link>
-                <Link href="/contact" className="text-sm text-muted-foreground hover:text-orange-500 transition-colors">
-                  Contact
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Connect</h4>
-              <div className="flex flex-col gap-2">
-                <a
-                  href="https://x.com/sovereignsignal"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
-                >
-                  𝕏 @sovereignsignal
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-                <a
-                  href="https://t.me/sovereignsignal"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
-                >
-                  📡 Telegram
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-                <a
-                  href="https://sovereignsignal.substack.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-orange-500 transition-colors inline-flex items-center gap-2"
-                >
-                  📰 Substack
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-border pt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              Curated by{" "}
-              <a
-                href="https://x.com/sovereignsignal"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-orange-500 hover:text-orange-400 transition-colors"
-              >
-                Sov
-              </a>
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
