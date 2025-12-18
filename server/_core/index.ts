@@ -10,6 +10,7 @@ import { serveStatic, setupVite } from "./vite";
 import { fetchNotionEntries, generateSlug } from "../notion";
 import { upsertGrantEntry, getDb } from "../db";
 import { sql } from "drizzle-orm";
+import { generateSitemap } from "../sitemap-generator";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -168,6 +169,9 @@ async function startServer() {
 
   // Initial sync from Notion (populate data on startup)
   await syncNotionData();
+
+  // Generate sitemap after data is synced
+  await generateSitemap();
 
   // Schedule hourly sync to keep data fresh
   scheduleNotionSync(60);

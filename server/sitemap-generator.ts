@@ -9,12 +9,12 @@ const __dirname = path.dirname(__filename);
 
 const BASE_URL = process.env.VITE_PUBLIC_APP_URL || 'https://cryptograntwire.com';
 
-async function generateSitemap() {
-    console.log('Generating sitemap...');
+export async function generateSitemap() {
+    console.log('[Sitemap] Generating sitemap...');
 
     try {
         const entries = await getGrantEntries({ limit: 10000 });
-        console.log(`Found ${entries.length} grant entries.`);
+        console.log(`[Sitemap] Found ${entries.length} grant entries.`);
 
         const staticPages = [
             '',
@@ -37,24 +37,28 @@ ${entries.map(entry => `  <url>
   </url>`).join('\n')}
 </urlset>`;
 
-        // Target client/public/sitemap.xml
-        // We are in server/, so client is ../client
-        const publicDir = path.resolve(__dirname, '../client/public');
+        // In production, write to dist/public (where static files are served from)
+        // In development, write to client/public
+        const isProduction = process.env.NODE_ENV === 'production';
+        const publicDir = isProduction
+            ? path.resolve(__dirname, '../dist/public')
+            : path.resolve(__dirname, '../client/public');
 
         if (!fs.existsSync(publicDir)) {
-            console.log(`Creating directory: ${publicDir}`);
+            console.log(`[Sitemap] Creating directory: ${publicDir}`);
             fs.mkdirSync(publicDir, { recursive: true });
         }
 
         const outputPath = path.join(publicDir, 'sitemap.xml');
         fs.writeFileSync(outputPath, xml);
-        console.log(`✅ Sitemap generated at ${outputPath}`);
-
-        process.exit(0);
+        console.log(`[Sitemap] Generated at ${outputPath}`);
     } catch (error) {
-        console.error('❌ Error generating sitemap:', error);
-        process.exit(1);
+        console.error('[Sitemap] Error generating sitemap:', error);
     }
 }
 
-generateSitemap();
+// Run as standalone script if executed directly
+const isMainModule = process.argv[1]?.includes('sitemap-generator');
+if (isMainModule) {
+    generateSitemap().then(() => process.exit(0)).catch(() => process.exit(1));
+}
