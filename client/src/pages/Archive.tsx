@@ -148,71 +148,72 @@ export default function Archive() {
               </div>
 
               <div className="max-w-4xl mx-auto border border-border rounded-xl overflow-hidden bg-card/30">
-                <div className="divide-y divide-border">
+                <ul className="divide-y divide-border">
                   {entries.map((entry) => {
                     const tags = entry.tags
                       ? entry.tags
-                          .split(",")
-                          .map(tag => tag.trim())
-                          .filter(Boolean)
+                        .split(",")
+                        .map(tag => tag.trim())
+                        .filter(Boolean)
                       : [];
 
                     const Row = entry.sourceUrl ? "a" : "div";
 
                     return (
-                      <Row
-                        key={entry.id}
-                        {...(entry.sourceUrl
-                          ? {
+                      <li key={entry.id}>
+                        <Row
+                          {...(entry.sourceUrl
+                            ? {
                               href: entry.sourceUrl,
                               target: "_blank",
                               rel: "noopener noreferrer",
                             }
-                          : {})}
-                        className="block p-5 hover:bg-muted/30 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-display text-lg font-semibold leading-snug">
-                              {entry.title}
-                            </h3>
+                            : {})}
+                          className="block p-5 hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-display text-lg font-semibold leading-snug">
+                                {entry.title}
+                              </h3>
 
-                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
-                              {entry.publishedAt ? (
-                                <span>{format(new Date(entry.publishedAt), "MMM d, yyyy")}</span>
-                              ) : null}
+                              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                                {entry.publishedAt ? (
+                                  <span>{format(new Date(entry.publishedAt), "MMM d, yyyy")}</span>
+                                ) : null}
 
-                              {entry.category ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-xs font-medium">
-                                  {entry.category}
-                                </span>
+                                {entry.category ? (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-500 text-xs font-medium">
+                                    {entry.category}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              {tags.length > 0 ? (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                  {tags.slice(0, 6).map((tag, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="inline-block px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
                               ) : null}
                             </div>
 
-                            {tags.length > 0 ? (
-                              <div className="mt-3 flex flex-wrap gap-1.5">
-                                {tags.slice(0, 6).map((tag, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="inline-block px-2 py-0.5 rounded bg-muted text-muted-foreground text-xs"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
+                            {entry.sourceUrl ? (
+                              <div className="shrink-0 pt-1 text-orange-500">
+                                <ExternalLink className="w-4 h-4" />
                               </div>
                             ) : null}
                           </div>
-
-                          {entry.sourceUrl ? (
-                            <div className="shrink-0 pt-1 text-orange-500">
-                              <ExternalLink className="w-4 h-4" />
-                            </div>
-                          ) : null}
-                        </div>
-                      </Row>
+                        </Row>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               </div>
             </>
           )}

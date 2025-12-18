@@ -21,7 +21,7 @@ export default function SiteLayout({
   return (
     <div className={cn("min-h-screen flex flex-col bg-background text-foreground", className)}>
       <Navbar />
-      <div
+      <main
         className={cn(
           "flex-1",
           includeNavbarOffset ? "pt-16" : undefined,
@@ -29,7 +29,7 @@ export default function SiteLayout({
         )}
       >
         {children}
-      </div>
+      </main>
       {showFooter ? <Footer /> : null}
     </div>
   );
