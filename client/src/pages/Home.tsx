@@ -1,5 +1,4 @@
-import { Link } from "wouter";
-import { ArrowRight, Mail, Send, ArrowUpRight, Vote, Trophy, Rocket, Coins, FileText, Wrench, X } from "lucide-react";
+import { ArrowRight, Mail, Send, ArrowUpRight, Vote, Trophy, Rocket, Coins, FileText, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SiteLayout from "@/components/SiteLayout";
 
@@ -36,12 +35,6 @@ const covered = [
   },
 ];
 
-const notCovered = [
-  "VC fundraises (seed rounds, Series A, etc.)",
-  "Product launches unless tied to funding",
-  "General crypto news (price action, listings)",
-  "Job postings",
-];
 
 export default function Home() {
   return (
@@ -178,7 +171,7 @@ export default function Home() {
             Focused coverage on the funding side of crypto. Everything builders need to find and track capital.
           </p>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {covered.map((item) => (
               <div
                 key={item.title}
@@ -189,21 +182,6 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
               </div>
             ))}
-          </div>
-
-          <div className="p-6 rounded-xl border border-accent/30 bg-accent/10">
-            <h3 className="text-sm font-medium text-accent uppercase tracking-wide mb-4">Not Covered</h3>
-            <div className="flex flex-wrap gap-3">
-              {notCovered.map((item) => (
-                <span
-                  key={item}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/60 border border-accent/30 text-sm text-muted-foreground"
-                >
-                  <X className="w-3 h-3 text-accent/70" />
-                  {item}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </section>
