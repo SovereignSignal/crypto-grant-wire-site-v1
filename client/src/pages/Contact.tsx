@@ -1,108 +1,82 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Mail, Send } from "lucide-react";
+import { Mail, MessageCircle, Send } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
 
 export default function Contact() {
   return (
     <SiteLayout>
-      {/* Main Content */}
-      <main className="flex-1 pt-16 pb-12">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <div className="mb-12">
-            <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">Get in Touch</h1>
-            <p className="text-xl text-muted-foreground">
-              Connect with Sov or submit grant program updates and funding opportunities.
-            </p>
-          </div>
+      <main className="flex-1 pt-24 pb-16">
+        <div className="max-w-2xl mx-auto px-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            Get in <span className="text-primary">Touch</span>
+          </h1>
+          <p className="text-muted-foreground text-center mb-12">
+            Have a tip, question, or want to collaborate? Reach out through any of these channels.
+          </p>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* About Section */}
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-border">
-              <h2 className="text-2xl font-bold mb-4">About</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                I've been tracking crypto grants and funding mechanisms for years. The Grant Wire is how I share what I learn with builders, grant managers, and anyone navigating the funding landscape.
-              </p>
-            </Card>
-
-            {/* Connect Section */}
-            <Card className="p-8 bg-card/50 backdrop-blur-sm border-border">
-              <h2 className="text-2xl font-bold mb-4">Connect</h2>
-              <div className="space-y-4">
-                <a
-                  href="https://twitter.com/sovereignsignal"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-muted-foreground hover:text-orange-500 transition-colors group"
-                >
-                  <div className="p-2 rounded-lg bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors">
-                    <span className="text-xl">𝕏</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold">X (Twitter)</div>
-                    <div className="text-sm">@sovereignsignal</div>
-                  </div>
-                </a>
-
-                <a
-                  href="https://t.me/cryptograntwire"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-muted-foreground hover:text-orange-500 transition-colors group"
-                >
-                  <div className="p-2 rounded-lg bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors">
-                    <span className="text-xl">📡</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Telegram Feed</div>
-                    <div className="text-sm">t.me/cryptograntwire</div>
-                  </div>
-                </a>
-
-                <a
-                  href="https://sovereignsignal.substack.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-muted-foreground hover:text-orange-500 transition-colors group"
-                >
-                  <div className="p-2 rounded-lg bg-orange-500/10 group-hover:bg-orange-500/20 transition-colors">
-                    <span className="text-xl">📰</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Substack</div>
-                    <div className="text-sm">sovereignsignal.substack.com</div>
-                  </div>
-                </a>
-              </div>
-            </Card>
-          </div>
-
-          {/* Submit a Tip Section */}
-          <Card className="p-8 bg-card/50 backdrop-blur-sm border-border">
-            <div className="flex items-center gap-3 mb-6">
-              <Mail className="w-6 h-6 text-orange-500" />
-              <h2 className="text-2xl font-bold">Submit a Tip</h2>
-            </div>
-
-            <p className="text-muted-foreground mb-6">
-              Share grant program updates, funding opportunities, or ecosystem developments that should be covered in the Grant Wire.
-            </p>
-
+          <div className="grid gap-4">
             <a
-              href="https://www.notion.so/sovs/13b000c0d59080cf8a88f085c7437552?v=13b000c0d59080d69f72000cca70d4ae"
+              href="https://t.me/sovereignsignal"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block"
+              className="group flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/50 transition-colors"
             >
-              <Button size="lg" className="w-full md:w-auto bg-orange-500 hover:bg-orange-600">
-                <Send className="w-4 h-4 mr-2" />
-                Submit a Tip
-              </Button>
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Send className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Telegram</h3>
+                <p className="text-sm text-muted-foreground">@sovereignsignal — DMs open</p>
+              </div>
             </a>
-          </Card>
+
+            <a
+              href="https://x.com/sovereignsignal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/50 transition-colors"
+            >
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                  X (Twitter)
+                </h3>
+                <p className="text-sm text-muted-foreground">@sovereignsignal — DMs open</p>
+              </div>
+            </a>
+
+            <a
+              href="mailto:sov@cryptograntwire.com"
+              className="group flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/50 transition-colors"
+            >
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Email</h3>
+                <p className="text-sm text-muted-foreground">sov@cryptograntwire.com</p>
+              </div>
+            </a>
+          </div>
+
+          <div className="mt-12 p-6 bg-card border border-border rounded-xl text-center">
+            <h3 className="font-semibold text-foreground mb-2">Submit a Tip</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Know about a grant program, funding round, or governance update that should be on the wire?
+            </p>
+            <a
+              href="https://t.me/sovereignsignal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Send className="w-4 h-4" />
+              Send a Tip
+            </a>
+          </div>
         </div>
       </main>
-
     </SiteLayout>
   );
 }
