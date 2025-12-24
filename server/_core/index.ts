@@ -35,40 +35,51 @@ async function runMigrations() {
   console.log("[Startup] Running database migrations...");
 
   try {
-    // Create users table
+    // Create role enum type (PostgreSQL)
+    await db.execute(sql`
+      DO $$ BEGIN
+        CREATE TYPE role AS ENUM ('user', 'admin');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `);
+
+    // Create users table (PostgreSQL)
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        openId VARCHAR(64) NOT NULL UNIQUE,
+        id SERIAL PRIMARY KEY,
+        "openId" VARCHAR(64) NOT NULL UNIQUE,
         name TEXT,
         email VARCHAR(320),
-        loginMethod VARCHAR(64),
-        role ENUM('user', 'admin') DEFAULT 'user' NOT NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
-        lastSignedIn TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+        "loginMethod" VARCHAR(64),
+        role role DEFAULT 'user' NOT NULL,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "lastSignedIn" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )
     `);
 
-    // Create grant_entries table
+    // Create grant_entries table (PostgreSQL)
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS grant_entries (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        notionId VARCHAR(128) NOT NULL UNIQUE,
+        id SERIAL PRIMARY KEY,
+        "externalId" VARCHAR(128) UNIQUE,
         title TEXT NOT NULL,
         slug VARCHAR(255) NOT NULL UNIQUE,
         category VARCHAR(128),
         content TEXT,
-        sourceUrl TEXT,
+        "sourceUrl" TEXT,
         tags TEXT,
-        publishedAt TIMESTAMP NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
-        INDEX slug_idx (slug),
-        INDEX category_idx (category),
-        INDEX published_at_idx (publishedAt)
+        "publishedAt" TIMESTAMP,
+        "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
       )
     `);
+
+    // Create indexes
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS slug_idx ON grant_entries (slug)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS category_idx ON grant_entries (category)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS published_at_idx ON grant_entries ("publishedAt")`);
 
     console.log("[Startup] Database migrations completed");
   } catch (error) {
@@ -77,9 +88,21 @@ async function runMigrations() {
 }
 
 /**
- * Sync data from Notion to database
+ * Check if Notion sync is enabled via environment variables
+ */
+function isNotionSyncEnabled(): boolean {
+  return !!(process.env.NOTION_API_KEY && process.env.NOTION_DATABASE_ID);
+}
+
+/**
+ * Sync data from Notion to database (only if Notion is configured)
  */
 async function syncNotionData() {
+  if (!isNotionSyncEnabled()) {
+    console.log("[Sync] Notion sync disabled (NOTION_API_KEY or NOTION_DATABASE_ID not set)");
+    return;
+  }
+
   console.log("[Sync] Starting Notion sync...");
 
   try {
@@ -94,7 +117,7 @@ async function syncNotionData() {
     for (const entry of entries) {
       try {
         await upsertGrantEntry({
-          notionId: entry.id,
+          externalId: entry.id,
           title: entry.title,
           slug: generateSlug(entry.title),
           category: entry.category ?? null,
@@ -116,9 +139,14 @@ async function syncNotionData() {
 }
 
 /**
- * Schedule recurring Notion sync
+ * Schedule recurring Notion sync (only if Notion is configured)
  */
 function scheduleNotionSync(intervalMinutes: number) {
+  if (!isNotionSyncEnabled()) {
+    console.log("[Startup] Notion sync scheduling skipped (not configured)");
+    return;
+  }
+
   const intervalMs = intervalMinutes * 60 * 1000;
 
   setInterval(async () => {

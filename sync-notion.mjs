@@ -5,7 +5,8 @@
  */
 
 import { config } from 'dotenv';
-import { drizzle } from 'drizzle-orm/mysql2';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
 import { grantEntries } from './drizzle/schema.js';
 
 // Load environment variables
@@ -124,7 +125,7 @@ function parseNotionEntry(page) {
     .substring(0, 200);
 
   return {
-    notionId: page.id,
+    externalId: page.id,
     title,
     slug,
     category,
@@ -143,12 +144,16 @@ async function syncToDatabase(entries) {
 
   console.log('💾 Syncing to database...');
 
-  const db = drizzle(process.env.DATABASE_URL);
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+  const db = drizzle(pool);
 
   let synced = 0;
   for (const entry of entries) {
     try {
-      await db.insert(grantEntries).values(entry).onDuplicateKeyUpdate({
+      await db.insert(grantEntries).values(entry).onConflictDoUpdate({
+        target: grantEntries.externalId,
         set: {
           title: entry.title,
           slug: entry.slug,
@@ -167,6 +172,7 @@ async function syncToDatabase(entries) {
     }
   }
 
+  await pool.end();
   console.log(`\n✅ Sync complete! ${synced} entries synced.`);
 }
 

@@ -28,15 +28,25 @@ export const appRouter = router({
     /**
      * Sync entries from Notion to local database
      * This should be called periodically or on-demand
+     * Only works if Notion is configured via environment variables
      */
     sync: publicProcedure.mutation(async () => {
+      // Check if Notion is configured
+      if (!process.env.NOTION_API_KEY || !process.env.NOTION_DATABASE_ID) {
+        return {
+          success: false,
+          synced: 0,
+          error: "Notion sync is not configured (missing NOTION_API_KEY or NOTION_DATABASE_ID)",
+        };
+      }
+
       try {
         const notionEntries = await fetchNotionEntries();
-        
+
         for (const entry of notionEntries) {
           const slug = generateSlug(entry.title);
           await upsertGrantEntry({
-            notionId: entry.id,
+            externalId: entry.id,
             title: entry.title,
             slug,
             category: entry.category,

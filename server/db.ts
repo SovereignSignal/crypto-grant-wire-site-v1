@@ -1,15 +1,20 @@
-import { eq, like, and, gte, lte, desc } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { eq, like, ilike, and, gte, lte, desc } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { InsertUser, users, grantEntries, InsertGrantEntry, GrantEntry } from "../drizzle/schema";
 import { ENV } from './_core/env';
+import pg from "pg";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: pg.Pool | null = null;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+      _db = drizzle(_pool);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -68,7 +73,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    // PostgreSQL upsert using ON CONFLICT
+    updateSet.updatedAt = new Date();
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -90,7 +98,7 @@ export async function getUserByOpenId(openId: string) {
 }
 
 /**
- * Upsert a grant entry (insert or update based on notionId)
+ * Upsert a grant entry (insert or update based on externalId)
  */
 export async function upsertGrantEntry(entry: InsertGrantEntry): Promise<void> {
   const db = await getDb();
@@ -100,18 +108,24 @@ export async function upsertGrantEntry(entry: InsertGrantEntry): Promise<void> {
   }
 
   try {
-    await db.insert(grantEntries).values(entry).onDuplicateKeyUpdate({
-      set: {
-        title: entry.title,
-        slug: entry.slug,
-        category: entry.category,
-        content: entry.content,
-        sourceUrl: entry.sourceUrl,
-        tags: entry.tags,
-        publishedAt: entry.publishedAt,
-        updatedAt: new Date(),
-      },
-    });
+    // If there's an externalId, use upsert; otherwise just insert
+    if (entry.externalId) {
+      await db.insert(grantEntries).values(entry).onConflictDoUpdate({
+        target: grantEntries.externalId,
+        set: {
+          title: entry.title,
+          slug: entry.slug,
+          category: entry.category,
+          content: entry.content,
+          sourceUrl: entry.sourceUrl,
+          tags: entry.tags,
+          publishedAt: entry.publishedAt,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      await db.insert(grantEntries).values(entry);
+    }
   } catch (error) {
     console.error("[Database] Failed to upsert grant entry:", error);
     throw error;
@@ -136,19 +150,20 @@ export async function getGrantEntries(params?: {
   }
 
   const conditions = [];
-  
+
   if (params?.search) {
-    conditions.push(like(grantEntries.title, `%${params.search}%`));
+    // Use ilike for case-insensitive search in PostgreSQL
+    conditions.push(ilike(grantEntries.title, `%${params.search}%`));
   }
-  
+
   if (params?.category) {
     conditions.push(eq(grantEntries.category, params.category));
   }
-  
+
   if (params?.startDate) {
     conditions.push(gte(grantEntries.publishedAt, params.startDate));
   }
-  
+
   if (params?.endDate) {
     conditions.push(lte(grantEntries.publishedAt, params.endDate));
   }
@@ -203,19 +218,20 @@ export async function countGrantEntries(params?: {
   }
 
   const conditions = [];
-  
+
   if (params?.search) {
-    conditions.push(like(grantEntries.title, `%${params.search}%`));
+    // Use ilike for case-insensitive search in PostgreSQL
+    conditions.push(ilike(grantEntries.title, `%${params.search}%`));
   }
-  
+
   if (params?.category) {
     conditions.push(eq(grantEntries.category, params.category));
   }
-  
+
   if (params?.startDate) {
     conditions.push(gte(grantEntries.publishedAt, params.startDate));
   }
-  
+
   if (params?.endDate) {
     conditions.push(lte(grantEntries.publishedAt, params.endDate));
   }
