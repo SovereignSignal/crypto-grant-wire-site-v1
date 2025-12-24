@@ -189,6 +189,12 @@ export default function Archive() {
                                 ) : null}
                               </div>
 
+                              {entry.content && entry.content !== entry.title ? (
+                                <p className="mt-3 text-sm text-muted-foreground line-clamp-3">
+                                  {entry.content}
+                                </p>
+                              ) : null}
+
                               {tags.length > 0 ? (
                                 <div className="mt-3 flex flex-wrap gap-1.5">
                                   {tags.slice(0, 6).map((tag, idx) => (
