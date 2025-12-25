@@ -1,4 +1,4 @@
-import { eq, like, ilike, and, gte, lte, desc } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { InsertUser, users, grantEntries, InsertGrantEntry, GrantEntry } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -21,6 +21,23 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+// Get raw pool for direct SQL queries
+// Ensures pool is initialized before returning
+export async function getPool(): Promise<pg.Pool | null> {
+  if (!_pool && process.env.DATABASE_URL) {
+    try {
+      _pool = new pg.Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+      _db = drizzle(_pool);
+    } catch (error) {
+      console.warn("[Database] Failed to connect:", error);
+      _pool = null;
+    }
+  }
+  return _pool;
 }
 
 export async function upsertUser(user: InsertUser): Promise<void> {
@@ -134,6 +151,7 @@ export async function upsertGrantEntry(entry: InsertGrantEntry): Promise<void> {
 
 /**
  * Get all grant entries with optional filters
+ * Joins with summaries table to get AI-generated summaries
  */
 export async function getGrantEntries(params?: {
   search?: string;
@@ -143,63 +161,123 @@ export async function getGrantEntries(params?: {
   limit?: number;
   offset?: number;
 }): Promise<GrantEntry[]> {
-  const db = await getDb();
-  if (!db) {
+  const pool = await getPool();
+  if (!pool) {
     console.warn("[Database] Cannot get grant entries: database not available");
     return [];
   }
 
-  const conditions = [];
+  // Build WHERE conditions
+  const conditions: string[] = [];
+  const values: any[] = [];
+  let paramIndex = 1;
 
   if (params?.search) {
-    // Use ilike for case-insensitive search in PostgreSQL
-    conditions.push(ilike(grantEntries.title, `%${params.search}%`));
+    conditions.push(`ge.title ILIKE $${paramIndex}`);
+    values.push(`%${params.search}%`);
+    paramIndex++;
   }
 
   if (params?.category) {
-    conditions.push(eq(grantEntries.category, params.category));
+    conditions.push(`ge.category = $${paramIndex}`);
+    values.push(params.category);
+    paramIndex++;
   }
 
   if (params?.startDate) {
-    conditions.push(gte(grantEntries.publishedAt, params.startDate));
+    conditions.push(`ge."publishedAt" >= $${paramIndex}`);
+    values.push(params.startDate);
+    paramIndex++;
   }
 
   if (params?.endDate) {
-    conditions.push(lte(grantEntries.publishedAt, params.endDate));
+    conditions.push(`ge."publishedAt" <= $${paramIndex}`);
+    values.push(params.endDate);
+    paramIndex++;
   }
 
-  let query = db
-    .select()
-    .from(grantEntries)
-    .orderBy(desc(grantEntries.publishedAt));
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const limitClause = params?.limit ? `LIMIT ${params.limit}` : '';
+  const offsetClause = params?.offset ? `OFFSET ${params.offset}` : '';
 
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
+  // Query with LEFT JOIN to summaries table via messages
+  // This reads summaries directly from the source, so they won't be overwritten
+  const query = `
+    SELECT DISTINCT ON (ge.id)
+      ge.id,
+      ge."externalId",
+      ge.title,
+      ge.slug,
+      ge.category,
+      COALESCE(s.summary, ge.content) as content,
+      ge."sourceUrl",
+      ge.tags,
+      ge."publishedAt",
+      ge."createdAt",
+      ge."updatedAt"
+    FROM grant_entries ge
+    LEFT JOIN messages m ON m.extracted_urls::text LIKE '%' || ge."sourceUrl" || '%'
+    LEFT JOIN summaries s ON s.message_id = m.id
+    ${whereClause}
+    ORDER BY ge.id, s.id DESC
+  `;
+
+  // Wrap in a subquery to apply ordering by publishedAt, limit, and offset
+  const finalQuery = `
+    SELECT * FROM (${query}) AS entries
+    ORDER BY "publishedAt" DESC NULLS LAST
+    ${limitClause}
+    ${offsetClause}
+  `;
+
+  try {
+    const result = await pool.query(finalQuery, values);
+    return result.rows as GrantEntry[];
+  } catch (error) {
+    console.error("[Database] Failed to get grant entries:", error);
+    return [];
   }
-
-  if (params?.limit) {
-    query = query.limit(params.limit) as any;
-  }
-
-  if (params?.offset) {
-    query = query.offset(params.offset) as any;
-  }
-
-  return await query;
 }
 
 /**
  * Get a single grant entry by slug
+ * Joins with summaries table to get AI-generated summary
  */
 export async function getGrantEntryBySlug(slug: string): Promise<GrantEntry | undefined> {
-  const db = await getDb();
-  if (!db) {
+  const pool = await getPool();
+  if (!pool) {
     console.warn("[Database] Cannot get grant entry: database not available");
     return undefined;
   }
 
-  const result = await db.select().from(grantEntries).where(eq(grantEntries.slug, slug)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  const query = `
+    SELECT DISTINCT ON (ge.id)
+      ge.id,
+      ge."externalId",
+      ge.title,
+      ge.slug,
+      ge.category,
+      COALESCE(s.summary, ge.content) as content,
+      ge."sourceUrl",
+      ge.tags,
+      ge."publishedAt",
+      ge."createdAt",
+      ge."updatedAt"
+    FROM grant_entries ge
+    LEFT JOIN messages m ON m.extracted_urls::text LIKE '%' || ge."sourceUrl" || '%'
+    LEFT JOIN summaries s ON s.message_id = m.id
+    WHERE ge.slug = $1
+    ORDER BY ge.id, s.id DESC
+    LIMIT 1
+  `;
+
+  try {
+    const result = await pool.query(query, [slug]);
+    return result.rows.length > 0 ? result.rows[0] as GrantEntry : undefined;
+  } catch (error) {
+    console.error("[Database] Failed to get grant entry by slug:", error);
+    return undefined;
+  }
 }
 
 /**
@@ -211,37 +289,50 @@ export async function countGrantEntries(params?: {
   startDate?: Date;
   endDate?: Date;
 }): Promise<number> {
-  const db = await getDb();
-  if (!db) {
+  const pool = await getPool();
+  if (!pool) {
     console.warn("[Database] Cannot count grant entries: database not available");
     return 0;
   }
 
-  const conditions = [];
+  // Build WHERE conditions
+  const conditions: string[] = [];
+  const values: any[] = [];
+  let paramIndex = 1;
 
   if (params?.search) {
-    // Use ilike for case-insensitive search in PostgreSQL
-    conditions.push(ilike(grantEntries.title, `%${params.search}%`));
+    conditions.push(`title ILIKE $${paramIndex}`);
+    values.push(`%${params.search}%`);
+    paramIndex++;
   }
 
   if (params?.category) {
-    conditions.push(eq(grantEntries.category, params.category));
+    conditions.push(`category = $${paramIndex}`);
+    values.push(params.category);
+    paramIndex++;
   }
 
   if (params?.startDate) {
-    conditions.push(gte(grantEntries.publishedAt, params.startDate));
+    conditions.push(`"publishedAt" >= $${paramIndex}`);
+    values.push(params.startDate);
+    paramIndex++;
   }
 
   if (params?.endDate) {
-    conditions.push(lte(grantEntries.publishedAt, params.endDate));
+    conditions.push(`"publishedAt" <= $${paramIndex}`);
+    values.push(params.endDate);
+    paramIndex++;
   }
 
-  let query = db.select().from(grantEntries);
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  if (conditions.length > 0) {
-    query = query.where(and(...conditions)) as any;
+  const query = `SELECT COUNT(*) as count FROM grant_entries ${whereClause}`;
+
+  try {
+    const result = await pool.query(query, values);
+    return parseInt(result.rows[0].count, 10);
+  } catch (error) {
+    console.error("[Database] Failed to count grant entries:", error);
+    return 0;
   }
-
-  const result = await query;
-  return result.length;
 }
