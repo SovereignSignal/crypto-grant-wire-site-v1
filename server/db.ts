@@ -336,3 +336,190 @@ export async function countGrantEntries(params?: {
     return 0;
   }
 }
+
+// =============================================================================
+// Messages & Summaries (for Archive page)
+// =============================================================================
+
+export interface MessageWithSummary {
+  id: number;
+  timestamp: Date;
+  rawContent: string;
+  extractedUrls: string[] | null;
+  summary: string | null;
+  entities: {
+    protocols?: string[];
+    key_terms?: string[];
+    amounts?: string[];
+    deadlines?: string[];
+    source?: { name?: string; url?: string | null };
+  } | null;
+  categoryId: number | null;
+  categoryName: string | null;
+}
+
+export interface CategoryWithCount {
+  id: number;
+  name: string;
+  count: number;
+}
+
+/**
+ * Search messages with summaries
+ * Supports cursor-based pagination for efficient "Load More"
+ */
+export async function searchMessages(params: {
+  query?: string;
+  category?: string;
+  cursor?: number;
+  limit?: number;
+}): Promise<{ messages: MessageWithSummary[]; nextCursor: number | null; total: number }> {
+  const pool = await getPool();
+  if (!pool) {
+    console.warn("[Database] Cannot search messages: database not available");
+    return { messages: [], nextCursor: null, total: 0 };
+  }
+
+  const limit = params.limit || 20;
+  const conditions: string[] = [];
+  const values: any[] = [];
+  let paramIndex = 1;
+
+  // Cursor-based pagination (fetch messages older than cursor)
+  if (params.cursor) {
+    conditions.push(`m.id < $${paramIndex}`);
+    values.push(params.cursor);
+    paramIndex++;
+  }
+
+  // Search query across summary and raw_content
+  if (params.query) {
+    conditions.push(`(s.summary ILIKE $${paramIndex} OR m.raw_content ILIKE $${paramIndex})`);
+    values.push(`%${params.query}%`);
+    paramIndex++;
+  }
+
+  // Category filter
+  if (params.category) {
+    conditions.push(`c.name = $${paramIndex}`);
+    values.push(params.category);
+    paramIndex++;
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  // Main query - join messages with summaries and categories
+  const query = `
+    SELECT
+      m.id,
+      m.timestamp,
+      m.raw_content as "rawContent",
+      m.extracted_urls as "extractedUrls",
+      s.summary,
+      s.entities,
+      s.category_id as "categoryId",
+      c.name as "categoryName"
+    FROM messages m
+    LEFT JOIN summaries s ON s.message_id = m.id
+    LEFT JOIN categories c ON s.category_id = c.id
+    ${whereClause}
+    ORDER BY m.timestamp DESC, m.id DESC
+    LIMIT $${paramIndex}
+  `;
+  values.push(limit + 1); // Fetch one extra to determine if there are more
+
+  // Count query (without cursor, but with search/category filters)
+  const countConditions: string[] = [];
+  const countValues: any[] = [];
+  let countParamIndex = 1;
+
+  if (params.query) {
+    countConditions.push(`(s.summary ILIKE $${countParamIndex} OR m.raw_content ILIKE $${countParamIndex})`);
+    countValues.push(`%${params.query}%`);
+    countParamIndex++;
+  }
+
+  if (params.category) {
+    countConditions.push(`c.name = $${countParamIndex}`);
+    countValues.push(params.category);
+    countParamIndex++;
+  }
+
+  const countWhereClause = countConditions.length > 0 ? `WHERE ${countConditions.join(' AND ')}` : '';
+  const countQuery = `
+    SELECT COUNT(*) as count
+    FROM messages m
+    LEFT JOIN summaries s ON s.message_id = m.id
+    LEFT JOIN categories c ON s.category_id = c.id
+    ${countWhereClause}
+  `;
+
+  try {
+    const [result, countResult] = await Promise.all([
+      pool.query(query, values),
+      pool.query(countQuery, countValues),
+    ]);
+
+    const messages = result.rows.slice(0, limit) as MessageWithSummary[];
+    const hasMore = result.rows.length > limit;
+    const nextCursor = hasMore && messages.length > 0 ? messages[messages.length - 1].id : null;
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    return { messages, nextCursor, total };
+  } catch (error) {
+    console.error("[Database] Failed to search messages:", error);
+    return { messages: [], nextCursor: null, total: 0 };
+  }
+}
+
+/**
+ * Get all categories with message counts
+ */
+export async function getCategories(): Promise<CategoryWithCount[]> {
+  const pool = await getPool();
+  if (!pool) {
+    console.warn("[Database] Cannot get categories: database not available");
+    return [];
+  }
+
+  const query = `
+    SELECT
+      c.id,
+      c.name,
+      COUNT(s.id) as count
+    FROM categories c
+    LEFT JOIN summaries s ON s.category_id = c.id
+    GROUP BY c.id, c.name
+    ORDER BY count DESC
+  `;
+
+  try {
+    const result = await pool.query(query);
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      count: parseInt(row.count, 10),
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get categories:", error);
+    return [];
+  }
+}
+
+/**
+ * Get total message count
+ */
+export async function getTotalMessageCount(): Promise<number> {
+  const pool = await getPool();
+  if (!pool) {
+    return 0;
+  }
+
+  try {
+    const result = await pool.query(`SELECT COUNT(*) as count FROM messages`);
+    return parseInt(result.rows[0].count, 10);
+  } catch (error) {
+    console.error("[Database] Failed to count messages:", error);
+    return 0;
+  }
+}

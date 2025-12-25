@@ -3,11 +3,14 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { 
-  getGrantEntries, 
-  getGrantEntryBySlug, 
+import {
+  getGrantEntries,
+  getGrantEntryBySlug,
   countGrantEntries,
-  upsertGrantEntry 
+  upsertGrantEntry,
+  searchMessages,
+  getCategories,
+  getTotalMessageCount,
 } from "./db";
 import { fetchNotionEntries, generateSlug } from "./notion";
 
@@ -149,6 +152,47 @@ export const appRouter = router({
         });
         return entries;
       }),
+  }),
+
+  /**
+   * Messages archive (search-first interface for 3000+ entries)
+   */
+  messages: router({
+    /**
+     * Search messages with summaries
+     * Supports cursor-based pagination for "Load More"
+     */
+    search: publicProcedure
+      .input(
+        z.object({
+          query: z.string().optional(),
+          category: z.string().optional(),
+          cursor: z.number().optional(),
+          limit: z.number().default(20),
+        })
+      )
+      .query(async ({ input }) => {
+        return await searchMessages({
+          query: input.query,
+          category: input.category,
+          cursor: input.cursor,
+          limit: input.limit,
+        });
+      }),
+
+    /**
+     * Get categories with message counts
+     */
+    categories: publicProcedure.query(async () => {
+      return await getCategories();
+    }),
+
+    /**
+     * Get total message count
+     */
+    count: publicProcedure.query(async () => {
+      return await getTotalMessageCount();
+    }),
   }),
 
   /**
