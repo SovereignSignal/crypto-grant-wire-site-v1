@@ -1,3 +1,19 @@
+/**
+ * @fileoverview tRPC API Router Definitions
+ *
+ * Defines all API endpoints for the application:
+ *
+ * - auth: Authentication (login/logout, current user)
+ * - grants: Legacy grant entries from Notion sync
+ * - messages: Archive search with 3000+ funding updates
+ * - contact: Contact form submissions
+ *
+ * All procedures use tRPC for end-to-end type safety.
+ * Public procedures require no authentication.
+ *
+ * @see README.md for API documentation
+ */
+
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -14,6 +30,10 @@ import {
 } from "./db";
 import { fetchNotionEntries, generateSlug } from "./notion";
 
+/**
+ * Main application router combining all sub-routers.
+ * Export type for client-side type inference.
+ */
 export const appRouter = router({
   system: systemRouter,
   auth: router({

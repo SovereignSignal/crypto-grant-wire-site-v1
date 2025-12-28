@@ -1,13 +1,44 @@
+/**
+ * @fileoverview Database Access Layer
+ *
+ * Provides functions for interacting with the PostgreSQL database:
+ * - Connection pooling with lazy initialization
+ * - User management (upsert, get by ID)
+ * - Grant entries (CRUD operations)
+ * - Message search with summaries (for Archive page)
+ * - Category management
+ *
+ * Uses Drizzle ORM for type-safe queries and raw pg.Pool for complex JOINs.
+ *
+ * @module server/db
+ */
+
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { InsertUser, users, grantEntries, InsertGrantEntry, GrantEntry } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import pg from "pg";
 
+/** Singleton Drizzle ORM instance */
 let _db: ReturnType<typeof drizzle> | null = null;
+
+/** Singleton PostgreSQL connection pool */
 let _pool: pg.Pool | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
+/**
+ * Gets the Drizzle ORM instance, creating it lazily if needed.
+ *
+ * Allows local tooling (like type generation) to run without
+ * a database connection by returning null when DATABASE_URL is not set.
+ *
+ * @returns Drizzle instance or null if database unavailable
+ *
+ * @example
+ * const db = await getDb();
+ * if (db) {
+ *   const users = await db.select().from(usersTable);
+ * }
+ */
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -23,8 +54,20 @@ export async function getDb() {
   return _db;
 }
 
-// Get raw pool for direct SQL queries
-// Ensures pool is initialized before returning
+/**
+ * Gets the raw PostgreSQL connection pool for direct SQL queries.
+ *
+ * Use this for complex queries that can't be expressed with Drizzle ORM,
+ * such as multi-table JOINs with dynamic conditions.
+ *
+ * @returns PostgreSQL Pool or null if database unavailable
+ *
+ * @example
+ * const pool = await getPool();
+ * if (pool) {
+ *   const result = await pool.query('SELECT * FROM messages WHERE id = $1', [id]);
+ * }
+ */
 export async function getPool(): Promise<pg.Pool | null> {
   if (!_pool && process.env.DATABASE_URL) {
     try {
@@ -40,6 +83,22 @@ export async function getPool(): Promise<pg.Pool | null> {
   return _pool;
 }
 
+/**
+ * Creates or updates a user in the database.
+ *
+ * Uses PostgreSQL ON CONFLICT DO UPDATE to handle both insert and update
+ * in a single operation. Automatically assigns admin role to the owner.
+ *
+ * @param user - User data to upsert (openId is required)
+ * @throws Error if openId is not provided
+ *
+ * @example
+ * await upsertUser({
+ *   openId: 'oauth-user-id-123',
+ *   name: 'John Doe',
+ *   email: 'john@example.com'
+ * });
+ */
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");
@@ -102,6 +161,18 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 }
 
+/**
+ * Retrieves a user by their OAuth Open ID.
+ *
+ * @param openId - The user's OAuth identifier
+ * @returns The user record or undefined if not found
+ *
+ * @example
+ * const user = await getUserByOpenId('oauth-user-id-123');
+ * if (user) {
+ *   console.log(`Welcome, ${user.name}`);
+ * }
+ */
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
   if (!db) {
@@ -115,7 +186,12 @@ export async function getUserByOpenId(openId: string) {
 }
 
 /**
- * Upsert a grant entry (insert or update based on externalId)
+ * Creates or updates a grant entry in the database.
+ *
+ * Uses externalId for conflict detection. If an entry with the same
+ * externalId exists, it will be updated; otherwise, a new entry is created.
+ *
+ * @param entry - Grant entry data to upsert
  */
 export async function upsertGrantEntry(entry: InsertGrantEntry): Promise<void> {
   const db = await getDb();

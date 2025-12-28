@@ -1,3 +1,19 @@
+/**
+ * @fileoverview Archive Page Component
+ *
+ * Search-first interface for browsing 3000+ funding updates.
+ *
+ * Features:
+ * - Full-text search with 300ms debounce
+ * - Category filtering via pill buttons
+ * - Cursor-based "Load More" pagination
+ * - Color-coded category badges
+ * - External link cards to source content
+ *
+ * Data is fetched from the messages/summaries tables via tRPC,
+ * automatically excluding entries pending review.
+ */
+
 import { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { ExternalLink, Search, Loader2 } from "lucide-react";
@@ -5,14 +21,20 @@ import { format } from "date-fns";
 import SiteLayout from "@/components/SiteLayout";
 
 /**
- * Get first URL from extracted_urls array
+ * Extracts the first URL from an array of extracted URLs.
+ *
+ * @param extractedUrls - Array of URLs extracted from the message
+ * @returns The first URL or null if none exist
  */
 function getSourceUrl(extractedUrls: string[] | null): string | null {
   if (!extractedUrls || extractedUrls.length === 0) return null;
   return extractedUrls[0];
 }
 
-// Category colors for visual distinction
+/**
+ * Tailwind CSS classes for category badge styling.
+ * Each category has a unique color scheme for visual distinction.
+ */
 const CATEGORY_COLORS: Record<string, string> = {
   "Governance & Treasury": "bg-blue-500/10 text-blue-400 border-blue-500/30",
   "Grant Programs": "bg-green-500/10 text-green-400 border-green-500/30",

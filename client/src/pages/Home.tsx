@@ -1,7 +1,24 @@
+/**
+ * @fileoverview Home Page Component
+ *
+ * Landing page for CryptoGrantWire featuring:
+ * - Hero section with animated signal indicator
+ * - Category showcase grid (6 coverage areas)
+ * - Call-to-action buttons to Archive and Telegram
+ * - Newsletter subscription section
+ *
+ * The page uses a full-height hero with background image
+ * and gradient overlays for visual appeal.
+ */
+
 import { ArrowRight, Mail, Send, ArrowUpRight, Vote, Trophy, Rocket, Coins, FileText, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SiteLayout from "@/components/SiteLayout";
 
+/**
+ * Content coverage categories displayed on the homepage.
+ * Each category represents a type of funding update tracked by the site.
+ */
 const covered = [
   {
     icon: Vote,
