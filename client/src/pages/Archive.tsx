@@ -5,48 +5,6 @@ import { format } from "date-fns";
 import SiteLayout from "@/components/SiteLayout";
 
 /**
- * Extract a title from message data
- * Priority: protocols > key_terms > URL domain > fallback
- */
-function extractTitle(
-  entities: { protocols?: string[]; key_terms?: string[] } | null,
-  extractedUrls: string[] | null,
-  rawContent: string
-): string {
-  // Try protocols first (e.g., "Gitcoin x Octant")
-  if (entities?.protocols && entities.protocols.length > 0) {
-    return entities.protocols.slice(0, 3).join(" x ");
-  }
-
-  // Try key_terms
-  if (entities?.key_terms && entities.key_terms.length > 0) {
-    // Capitalize and take first term
-    const term = entities.key_terms[0];
-    return term.charAt(0).toUpperCase() + term.slice(1);
-  }
-
-  // Try URL domain
-  if (extractedUrls && extractedUrls.length > 0) {
-    try {
-      const url = new URL(extractedUrls[0]);
-      // Handle x.com/twitter specially to show username
-      if (url.hostname === "x.com" || url.hostname === "twitter.com") {
-        const username = url.pathname.split("/")[1];
-        if (username) return `@${username}`;
-      }
-      // Return hostname without www
-      return url.hostname.replace(/^www\./, "");
-    } catch {
-      // Invalid URL, continue to fallback
-    }
-  }
-
-  // Fallback: first line of raw content (strip emoji prefix)
-  const firstLine = rawContent.split("\n")[0].replace(/^[📡🔔💰🎯]+\s*/, "").trim();
-  return firstLine.slice(0, 60) || "Update";
-}
-
-/**
  * Get first URL from extracted_urls array
  */
 function getSourceUrl(extractedUrls: string[] | null): string | null {
@@ -224,7 +182,8 @@ export default function Archive() {
           {allMessages.length > 0 && (
             <div className="space-y-4">
               {allMessages.map((msg) => {
-                const title = extractTitle(msg.entities, msg.extractedUrls, msg.rawContent);
+                // Use title from API (summaries.title field), fallback to "Update"
+                const title = msg.title || "Update";
                 const sourceUrl = getSourceUrl(msg.extractedUrls);
                 const categoryColor = msg.categoryName
                   ? CATEGORY_COLORS[msg.categoryName] || "bg-primary/10 text-primary border-primary/30"

@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { InsertUser, users, grantEntries, InsertGrantEntry, GrantEntry } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -346,6 +346,7 @@ export interface MessageWithSummary {
   timestamp: Date;
   rawContent: string;
   extractedUrls: string[] | null;
+  title: string | null;
   summary: string | null;
   entities: {
     protocols?: string[];
@@ -406,15 +407,23 @@ export async function searchMessages(params: {
     paramIndex++;
   }
 
+  // Always exclude entries in review_queue with pending status
+  conditions.push(`NOT EXISTS (
+    SELECT 1 FROM review_queue rq
+    WHERE rq.summary_id = s.id AND rq.status = 'pending'
+  )`);
+
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   // Main query - join messages with summaries and categories
+  // Uses s.title from summaries table (AI-generated titles)
   const query = `
     SELECT
       m.id,
       m.timestamp,
       m.raw_content as "rawContent",
       m.extracted_urls as "extractedUrls",
+      s.title,
       s.summary,
       s.entities,
       s.category_id as "categoryId",
@@ -445,6 +454,12 @@ export async function searchMessages(params: {
     countParamIndex++;
   }
 
+  // Also exclude review_queue pending entries from count
+  countConditions.push(`NOT EXISTS (
+    SELECT 1 FROM review_queue rq
+    WHERE rq.summary_id = s.id AND rq.status = 'pending'
+  )`);
+
   const countWhereClause = countConditions.length > 0 ? `WHERE ${countConditions.join(' AND ')}` : '';
   const countQuery = `
     SELECT COUNT(*) as count
@@ -474,6 +489,7 @@ export async function searchMessages(params: {
 
 /**
  * Get all categories with message counts
+ * Excludes entries in review_queue with pending status
  */
 export async function getCategories(): Promise<CategoryWithCount[]> {
   const pool = await getPool();
@@ -489,6 +505,10 @@ export async function getCategories(): Promise<CategoryWithCount[]> {
       COUNT(s.id) as count
     FROM categories c
     LEFT JOIN summaries s ON s.category_id = c.id
+      AND NOT EXISTS (
+        SELECT 1 FROM review_queue rq
+        WHERE rq.summary_id = s.id AND rq.status = 'pending'
+      )
     GROUP BY c.id, c.name
     ORDER BY count DESC
   `;
@@ -508,6 +528,7 @@ export async function getCategories(): Promise<CategoryWithCount[]> {
 
 /**
  * Get total message count
+ * Excludes entries in review_queue with pending status
  */
 export async function getTotalMessageCount(): Promise<number> {
   const pool = await getPool();
@@ -516,7 +537,15 @@ export async function getTotalMessageCount(): Promise<number> {
   }
 
   try {
-    const result = await pool.query(`SELECT COUNT(*) as count FROM messages`);
+    const result = await pool.query(`
+      SELECT COUNT(*) as count
+      FROM messages m
+      LEFT JOIN summaries s ON s.message_id = m.id
+      WHERE NOT EXISTS (
+        SELECT 1 FROM review_queue rq
+        WHERE rq.summary_id = s.id AND rq.status = 'pending'
+      )
+    `);
     return parseInt(result.rows[0].count, 10);
   } catch (error) {
     console.error("[Database] Failed to count messages:", error);
