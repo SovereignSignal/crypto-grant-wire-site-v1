@@ -63,7 +63,6 @@ export default function Archive() {
       setSearchQuery(search);
       // Reset pagination when search changes
       setCursor(undefined);
-      setAllMessages([]);
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
@@ -71,7 +70,6 @@ export default function Archive() {
   // Reset pagination when category changes
   useEffect(() => {
     setCursor(undefined);
-    setAllMessages([]);
   }, [selectedCategory]);
 
   // Fetch categories
@@ -90,7 +88,6 @@ export default function Archive() {
     setShowSuggestions(false);
     setHighlightedIndex(-1);
     setCursor(undefined);
-    setAllMessages([]);
     searchInputRef.current?.blur();
   }, []);
 
@@ -152,30 +149,30 @@ export default function Archive() {
     limit: 20,
   });
 
-  // Accumulate messages for "Load More"
-  // Track the current query to detect when results are for a new search
-  const [lastQueryKey, setLastQueryKey] = useState("");
-  const currentQueryKey = `${searchQuery}-${selectedCategory || ""}`;
+  // Track whether this is a "Load More" request vs a fresh search
+  const isLoadMore = useRef(false);
 
+  // Accumulate messages for "Load More"
   useEffect(() => {
     if (data?.messages) {
-      if (cursor === undefined || currentQueryKey !== lastQueryKey) {
-        // Fresh search or query changed, replace all
-        setAllMessages(data.messages);
-        setLastQueryKey(currentQueryKey);
-      } else {
+      if (isLoadMore.current) {
         // Load more, append (avoid duplicates)
         setAllMessages((prev) => {
           const existingIds = new Set(prev.map((m) => m.id));
           const newMessages = data.messages.filter((m: any) => !existingIds.has(m.id));
           return [...prev, ...newMessages];
         });
+        isLoadMore.current = false;
+      } else {
+        // Fresh search, replace all
+        setAllMessages(data.messages);
       }
     }
-  }, [data, cursor, currentQueryKey, lastQueryKey]);
+  }, [data]);
 
   const handleLoadMore = () => {
     if (data?.nextCursor) {
+      isLoadMore.current = true;
       setCursor(data.nextCursor);
     }
   };
