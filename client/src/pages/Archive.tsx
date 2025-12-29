@@ -16,7 +16,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
-import { ExternalLink, Search, Loader2, Rss } from "lucide-react";
+import { ExternalLink, Search, Loader2, Rss, X } from "lucide-react";
 import { format } from "date-fns";
 import SiteLayout from "@/components/SiteLayout";
 
@@ -153,17 +153,26 @@ export default function Archive() {
   });
 
   // Accumulate messages for "Load More"
+  // Track the current query to detect when results are for a new search
+  const [lastQueryKey, setLastQueryKey] = useState("");
+  const currentQueryKey = `${searchQuery}-${selectedCategory || ""}`;
+
   useEffect(() => {
     if (data?.messages) {
-      if (cursor === undefined) {
-        // Fresh search, replace all
+      if (cursor === undefined || currentQueryKey !== lastQueryKey) {
+        // Fresh search or query changed, replace all
         setAllMessages(data.messages);
+        setLastQueryKey(currentQueryKey);
       } else {
-        // Load more, append
-        setAllMessages((prev) => [...prev, ...data.messages]);
+        // Load more, append (avoid duplicates)
+        setAllMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const newMessages = data.messages.filter((m: any) => !existingIds.has(m.id));
+          return [...prev, ...newMessages];
+        });
       }
     }
-  }, [data, cursor]);
+  }, [data, cursor, currentQueryKey, lastQueryKey]);
 
   const handleLoadMore = () => {
     if (data?.nextCursor) {
@@ -191,7 +200,7 @@ export default function Archive() {
               Grant Wire <span className="text-primary">Archive</span>
             </h1>
             <p className="text-muted-foreground mb-4">
-              Search {total > 0 ? total.toLocaleString() : "thousands of"} funding updates
+              Search {isLoading ? "" : total.toLocaleString()} funding updates
             </p>
             <a
               href="/api/feeds/messages.rss"
@@ -219,8 +228,24 @@ export default function Archive() {
               }}
               onFocus={() => setShowSuggestions(true)}
               onKeyDown={handleKeyDown}
-              className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-xl text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
+              className="w-full pl-12 pr-12 py-4 bg-card border border-border rounded-xl text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
             />
+            {/* Clear search button */}
+            {search && (
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setSearchQuery("");
+                  setShowSuggestions(false);
+                  setCursor(undefined);
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground hover:text-foreground transition-colors z-10"
+                aria-label="Clear search"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
 
             {/* Suggestions Dropdown */}
             {showSuggestions && suggestions && suggestions.length > 0 && (
