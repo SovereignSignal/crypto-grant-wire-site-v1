@@ -11,6 +11,7 @@ import { fetchNotionEntries, generateSlug } from "../notion";
 import { upsertGrantEntry, getDb } from "../db";
 import { sql } from "drizzle-orm";
 import { generateSitemap } from "../sitemap-generator";
+import { generateMainFeed, generateCategoryFeed, getAvailableFeeds } from "../feeds";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -177,6 +178,75 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // RSS/Atom Feed routes
+  app.get("/api/feeds/messages.rss", async (_req, res) => {
+    try {
+      const feed = await generateMainFeed("rss");
+      res.type("application/rss+xml").send(feed);
+    } catch (error) {
+      console.error("[Feeds] Error generating RSS feed:", error);
+      res.status(500).send("Error generating feed");
+    }
+  });
+
+  app.get("/api/feeds/messages.atom", async (_req, res) => {
+    try {
+      const feed = await generateMainFeed("atom");
+      res.type("application/atom+xml").send(feed);
+    } catch (error) {
+      console.error("[Feeds] Error generating Atom feed:", error);
+      res.status(500).send("Error generating feed");
+    }
+  });
+
+  app.get("/api/feeds/category/:slug.rss", async (req, res) => {
+    try {
+      // Convert slug back to category name for lookup
+      const categoryName = req.params.slug
+        .replace(/-and-/g, " & ")
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      const feed = await generateCategoryFeed(categoryName, "rss");
+      if (!feed) {
+        return res.status(404).send("Category not found");
+      }
+      res.type("application/rss+xml").send(feed);
+    } catch (error) {
+      console.error("[Feeds] Error generating category RSS feed:", error);
+      res.status(500).send("Error generating feed");
+    }
+  });
+
+  app.get("/api/feeds/category/:slug.atom", async (req, res) => {
+    try {
+      const categoryName = req.params.slug
+        .replace(/-and-/g, " & ")
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      const feed = await generateCategoryFeed(categoryName, "atom");
+      if (!feed) {
+        return res.status(404).send("Category not found");
+      }
+      res.type("application/atom+xml").send(feed);
+    } catch (error) {
+      console.error("[Feeds] Error generating category Atom feed:", error);
+      res.status(500).send("Error generating feed");
+    }
+  });
+
+  app.get("/api/feeds", async (_req, res) => {
+    try {
+      const feeds = await getAvailableFeeds();
+      res.json(feeds);
+    } catch (error) {
+      console.error("[Feeds] Error getting available feeds:", error);
+      res.status(500).json({ error: "Error fetching feeds" });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",

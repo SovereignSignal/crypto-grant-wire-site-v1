@@ -4,7 +4,7 @@
  * Search-first interface for browsing 3000+ funding updates.
  *
  * Features:
- * - Full-text search with 300ms debounce
+ * - Full-text search with 300ms debounce and autocomplete suggestions
  * - Category filtering via pill buttons
  * - Cursor-based "Load More" pagination
  * - Color-coded category badges
@@ -14,9 +14,9 @@
  * automatically excluding entries pending review.
  */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
-import { ExternalLink, Search, Loader2 } from "lucide-react";
+import { ExternalLink, Search, Loader2, Rss } from "lucide-react";
 import { format } from "date-fns";
 import SiteLayout from "@/components/SiteLayout";
 
@@ -51,6 +51,12 @@ export default function Archive() {
   const [cursor, setCursor] = useState<number | undefined>(undefined);
   const [allMessages, setAllMessages] = useState<any[]>([]);
 
+  // Autocomplete state
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -70,6 +76,73 @@ export default function Archive() {
 
   // Fetch categories
   const { data: categories } = trpc.messages.categories.useQuery();
+
+  // Fetch search suggestions (only when search has 2+ chars)
+  const { data: suggestions } = trpc.messages.suggestions.useQuery(
+    { prefix: search, limit: 8 },
+    { enabled: search.length >= 2 }
+  );
+
+  // Handle suggestion selection
+  const selectSuggestion = useCallback((term: string) => {
+    setSearch(term);
+    setSearchQuery(term);
+    setShowSuggestions(false);
+    setHighlightedIndex(-1);
+    setCursor(undefined);
+    setAllMessages([]);
+    searchInputRef.current?.blur();
+  }, []);
+
+  // Handle keyboard navigation in suggestions
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!suggestions?.length || !showSuggestions) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev < suggestions.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev > 0 ? prev - 1 : suggestions.length - 1
+          );
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+            selectSuggestion(suggestions[highlightedIndex].term);
+          }
+          break;
+        case "Escape":
+          setShowSuggestions(false);
+          setHighlightedIndex(-1);
+          break;
+      }
+    },
+    [suggestions, showSuggestions, highlightedIndex, selectSuggestion]
+  );
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(e.target as Node) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Fetch messages
   const { data, isLoading, isFetching } = trpc.messages.search.useQuery({
@@ -117,21 +190,74 @@ export default function Archive() {
             <h1 className="text-3xl md:text-4xl font-bold mb-3">
               Grant Wire <span className="text-primary">Archive</span>
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
               Search {total > 0 ? total.toLocaleString() : "thousands of"} funding updates
             </p>
+            <a
+              href="/api/feeds/messages.rss"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Rss className="w-4 h-4" />
+              Subscribe via RSS
+            </a>
           </div>
 
-          {/* Search Input */}
+          {/* Search Input with Autocomplete */}
           <div className="relative mb-6">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search grants, protocols, funding..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setShowSuggestions(true);
+                setHighlightedIndex(-1);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={handleKeyDown}
               className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-xl text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
             />
+
+            {/* Suggestions Dropdown */}
+            {showSuggestions && suggestions && suggestions.length > 0 && (
+              <div
+                ref={suggestionsRef}
+                className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden"
+              >
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={`${suggestion.term}-${suggestion.type}`}
+                    onClick={() => selectSuggestion(suggestion.term)}
+                    className={`w-full px-4 py-3 text-left flex items-center justify-between transition-colors ${
+                      index === highlightedIndex
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    <span className="font-medium">{suggestion.term}</span>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        suggestion.type === "protocol"
+                          ? "bg-blue-500/10 text-blue-400"
+                          : suggestion.type === "category"
+                          ? "bg-green-500/10 text-green-400"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {suggestion.type === "protocol"
+                        ? "Protocol"
+                        : suggestion.type === "category"
+                        ? "Category"
+                        : "Term"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Category Pills */}

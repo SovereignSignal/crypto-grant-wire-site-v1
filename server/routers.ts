@@ -27,6 +27,7 @@ import {
   searchMessages,
   getCategories,
   getTotalMessageCount,
+  getSearchSuggestions,
 } from "./db";
 import { fetchNotionEntries, generateSlug } from "./notion";
 
@@ -213,6 +214,24 @@ export const appRouter = router({
     count: publicProcedure.query(async () => {
       return await getTotalMessageCount();
     }),
+
+    /**
+     * Get search suggestions based on prefix
+     * Returns terms from protocols, key_terms, and categories
+     */
+    suggestions: publicProcedure
+      .input(
+        z.object({
+          prefix: z.string().min(2),
+          limit: z.number().default(8),
+        })
+      )
+      .query(async ({ input }) => {
+        return await getSearchSuggestions({
+          prefix: input.prefix,
+          limit: input.limit,
+        });
+      }),
   }),
 
   /**

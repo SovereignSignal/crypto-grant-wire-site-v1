@@ -441,9 +441,36 @@ export interface CategoryWithCount {
   count: number;
 }
 
+/** Cached flag for whether FTS is available */
+let _ftsAvailable: boolean | null = null;
+
+/**
+ * Check if full-text search is available (search_vector column exists)
+ */
+async function isFtsAvailable(): Promise<boolean> {
+  if (_ftsAvailable !== null) return _ftsAvailable;
+
+  const pool = await getPool();
+  if (!pool) return false;
+
+  try {
+    const result = await pool.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'summaries' AND column_name = 'search_vector'
+    `);
+    _ftsAvailable = result.rows.length > 0;
+    console.log(`[Database] Full-text search ${_ftsAvailable ? 'enabled' : 'disabled (run migration to enable)'}`);
+    return _ftsAvailable;
+  } catch {
+    _ftsAvailable = false;
+    return false;
+  }
+}
+
 /**
  * Search messages with summaries
  * Supports cursor-based pagination for efficient "Load More"
+ * Uses PostgreSQL full-text search when available, falls back to ILIKE
  */
 export async function searchMessages(params: {
   query?: string;
@@ -462,6 +489,9 @@ export async function searchMessages(params: {
   const values: any[] = [];
   let paramIndex = 1;
 
+  // Check if FTS is available
+  const useFts = params.query && (await isFtsAvailable());
+
   // Cursor-based pagination (fetch messages older than cursor)
   if (params.cursor) {
     conditions.push(`m.id < $${paramIndex}`);
@@ -469,11 +499,19 @@ export async function searchMessages(params: {
     paramIndex++;
   }
 
-  // Search query across summary and raw_content
+  // Search query - use FTS when available, fall back to ILIKE
   if (params.query) {
-    conditions.push(`(s.summary ILIKE $${paramIndex} OR m.raw_content ILIKE $${paramIndex})`);
-    values.push(`%${params.query}%`);
-    paramIndex++;
+    if (useFts) {
+      // Full-text search with ranking
+      conditions.push(`s.search_vector @@ plainto_tsquery('english', $${paramIndex})`);
+      values.push(params.query);
+      paramIndex++;
+    } else {
+      // Fallback to ILIKE pattern matching
+      conditions.push(`(s.summary ILIKE $${paramIndex} OR m.raw_content ILIKE $${paramIndex})`);
+      values.push(`%${params.query}%`);
+      paramIndex++;
+    }
   }
 
   // Category filter
@@ -490,6 +528,17 @@ export async function searchMessages(params: {
   )`);
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  // Build ORDER BY clause - use relevance ranking for FTS searches
+  let orderByClause: string;
+  if (useFts && params.query) {
+    // Order by relevance score when searching, then by timestamp
+    orderByClause = `ORDER BY ts_rank(s.search_vector, plainto_tsquery('english', $${paramIndex})) DESC, m.timestamp DESC, m.id DESC`;
+    values.push(params.query);
+    paramIndex++;
+  } else {
+    orderByClause = `ORDER BY m.timestamp DESC, m.id DESC`;
+  }
 
   // Main query - join messages with summaries and categories
   // Uses s.title from summaries table (AI-generated titles)
@@ -508,7 +557,7 @@ export async function searchMessages(params: {
     LEFT JOIN summaries s ON s.message_id = m.id
     LEFT JOIN categories c ON s.category_id = c.id
     ${whereClause}
-    ORDER BY m.timestamp DESC, m.id DESC
+    ${orderByClause}
     LIMIT $${paramIndex}
   `;
   values.push(limit + 1); // Fetch one extra to determine if there are more
@@ -519,9 +568,15 @@ export async function searchMessages(params: {
   let countParamIndex = 1;
 
   if (params.query) {
-    countConditions.push(`(s.summary ILIKE $${countParamIndex} OR m.raw_content ILIKE $${countParamIndex})`);
-    countValues.push(`%${params.query}%`);
-    countParamIndex++;
+    if (useFts) {
+      countConditions.push(`s.search_vector @@ plainto_tsquery('english', $${countParamIndex})`);
+      countValues.push(params.query);
+      countParamIndex++;
+    } else {
+      countConditions.push(`(s.summary ILIKE $${countParamIndex} OR m.raw_content ILIKE $${countParamIndex})`);
+      countValues.push(`%${params.query}%`);
+      countParamIndex++;
+    }
   }
 
   if (params.category) {
@@ -626,5 +681,80 @@ export async function getTotalMessageCount(): Promise<number> {
   } catch (error) {
     console.error("[Database] Failed to count messages:", error);
     return 0;
+  }
+}
+
+export interface SearchSuggestion {
+  term: string;
+  frequency: number;
+  type: "protocol" | "term" | "category";
+}
+
+/**
+ * Get search suggestions based on prefix
+ * Pulls from entities (protocols, key_terms) and categories
+ */
+export async function getSearchSuggestions(params: {
+  prefix: string;
+  limit?: number;
+}): Promise<SearchSuggestion[]> {
+  const pool = await getPool();
+  if (!pool) {
+    console.warn("[Database] Cannot get suggestions: database not available");
+    return [];
+  }
+
+  const limit = params.limit || 8;
+  const prefix = params.prefix.toLowerCase();
+
+  // Query extracts terms from entities JSON (cast to jsonb for compatibility) and combines with category names
+  const query = `
+    WITH protocol_terms AS (
+      SELECT
+        jsonb_array_elements_text(entities::jsonb->'protocols') as term,
+        'protocol' as type
+      FROM summaries
+      WHERE entities IS NOT NULL AND entities::jsonb->'protocols' IS NOT NULL
+    ),
+    key_terms AS (
+      SELECT
+        jsonb_array_elements_text(entities::jsonb->'key_terms') as term,
+        'term' as type
+      FROM summaries
+      WHERE entities IS NOT NULL AND entities::jsonb->'key_terms' IS NOT NULL
+    ),
+    category_terms AS (
+      SELECT name as term, 'category' as type
+      FROM categories
+    ),
+    all_terms AS (
+      SELECT term, type FROM protocol_terms
+      UNION ALL
+      SELECT term, type FROM key_terms
+      UNION ALL
+      SELECT term, type FROM category_terms
+    )
+    SELECT
+      term,
+      type,
+      COUNT(*) as frequency
+    FROM all_terms
+    WHERE LOWER(term) LIKE $1 || '%'
+      AND LENGTH(term) >= 2
+    GROUP BY term, type
+    ORDER BY frequency DESC, LENGTH(term) ASC
+    LIMIT $2
+  `;
+
+  try {
+    const result = await pool.query(query, [prefix, limit]);
+    return result.rows.map((row) => ({
+      term: row.term,
+      frequency: parseInt(row.frequency, 10),
+      type: row.type as SearchSuggestion["type"],
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get search suggestions:", error);
+    return [];
   }
 }
