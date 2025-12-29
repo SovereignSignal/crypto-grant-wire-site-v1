@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, Home } from "lucide-react";
@@ -6,6 +7,10 @@ import SiteLayout from "@/components/SiteLayout";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    document.title = "Page Not Found | Crypto Grant Wire";
+  }, []);
 
   const handleGoHome = () => {
     setLocation("/");

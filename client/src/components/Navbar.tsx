@@ -54,9 +54,9 @@ export default function Navbar() {
     >
       <div className="max-w-5xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-3">
-            <img src="/images/cgw-logo-solo.png" alt="Crypto Grant Wire" className="w-8 h-8" />
-            <span className="text-lg font-semibold">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <img src="/images/cgw-logo-solo.png" alt="Crypto Grant Wire" className="w-8 h-8 flex-shrink-0" />
+            <span className="text-base sm:text-lg font-semibold truncate">
               <span className="text-primary">Crypto</span>
               <span className="text-foreground">Grant</span>
               <span className="text-primary">Wire</span>
@@ -77,7 +77,12 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <button className="md:hidden p-2 text-foreground/70" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <button
+            className="md:hidden p-2 text-foreground/70"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMenuOpen}
+          >
             {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>

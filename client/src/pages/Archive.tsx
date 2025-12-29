@@ -51,6 +51,11 @@ export default function Archive() {
   const [cursor, setCursor] = useState<number | undefined>(undefined);
   const [allMessages, setAllMessages] = useState<any[]>([]);
 
+  // Set page title
+  useEffect(() => {
+    document.title = "Archive | Crypto Grant Wire";
+  }, []);
+
   // Autocomplete state
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);

@@ -1,7 +1,12 @@
+import { useEffect } from "react";
 import { Mail, MessageCircle, Send } from "lucide-react";
 import SiteLayout from "@/components/SiteLayout";
 
 export default function Contact() {
+  useEffect(() => {
+    document.title = "Contact | Crypto Grant Wire";
+  }, []);
+
   return (
     <SiteLayout>
       <main className="flex-1 pt-24 pb-16">

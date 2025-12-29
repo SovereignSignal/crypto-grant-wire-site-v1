@@ -11,6 +11,7 @@
  * and gradient overlays for visual appeal.
  */
 
+import { useEffect } from "react";
 import { ArrowRight, Mail, Send, ArrowUpRight, Vote, Trophy, Rocket, Coins, FileText, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SiteLayout from "@/components/SiteLayout";
@@ -54,6 +55,10 @@ const covered = [
 
 
 export default function Home() {
+  useEffect(() => {
+    document.title = "Sov's Crypto Grant Wire — Crypto Grants & Funding Intelligence";
+  }, []);
+
   return (
     <SiteLayout includeNavbarOffset={false} showFooter={true}>
       {/* Hero Section */}
