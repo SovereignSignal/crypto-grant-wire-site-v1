@@ -1,0 +1,12 @@
+# Robots.txt for Crypto Grant Wire
+# https://cryptograntwire.com
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://cryptograntwire.com/sitemap.xml
+
+# RSS/Atom feeds
+# RSS: https://cryptograntwire.com/api/feeds/messages.rss
+# Atom: https://cryptograntwire.com/api/feeds/messages.atom
