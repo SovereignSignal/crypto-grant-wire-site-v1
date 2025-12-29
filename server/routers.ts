@@ -187,7 +187,7 @@ export const appRouter = router({
       .input(
         z.object({
           query: z.string().optional(),
-          category: z.string().optional(),
+          categories: z.array(z.string()).optional(),
           cursor: z.number().optional(),
           limit: z.number().default(20),
         })
@@ -195,7 +195,7 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await searchMessages({
           query: input.query,
-          category: input.category,
+          categories: input.categories,
           cursor: input.cursor,
           limit: input.limit,
         });

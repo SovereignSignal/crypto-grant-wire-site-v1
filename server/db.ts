@@ -474,7 +474,7 @@ async function isFtsAvailable(): Promise<boolean> {
  */
 export async function searchMessages(params: {
   query?: string;
-  category?: string;
+  categories?: string[];
   cursor?: number;
   limit?: number;
 }): Promise<{ messages: MessageWithSummary[]; nextCursor: number | null; total: number }> {
@@ -514,11 +514,12 @@ export async function searchMessages(params: {
     }
   }
 
-  // Category filter
-  if (params.category) {
-    conditions.push(`c.name = $${paramIndex}`);
-    values.push(params.category);
-    paramIndex++;
+  // Category filter (supports multiple categories with OR logic)
+  if (params.categories && params.categories.length > 0) {
+    const placeholders = params.categories.map((_, i) => `$${paramIndex + i}`).join(', ');
+    conditions.push(`c.name IN (${placeholders})`);
+    values.push(...params.categories);
+    paramIndex += params.categories.length;
   }
 
   // Always exclude entries in review_queue with pending status
@@ -579,10 +580,11 @@ export async function searchMessages(params: {
     }
   }
 
-  if (params.category) {
-    countConditions.push(`c.name = $${countParamIndex}`);
-    countValues.push(params.category);
-    countParamIndex++;
+  if (params.categories && params.categories.length > 0) {
+    const placeholders = params.categories.map((_, i) => `$${countParamIndex + i}`).join(', ');
+    countConditions.push(`c.name IN (${placeholders})`);
+    countValues.push(...params.categories);
+    countParamIndex += params.categories.length;
   }
 
   // Also exclude review_queue pending entries from count

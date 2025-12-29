@@ -47,7 +47,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function Archive() {
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [cursor, setCursor] = useState<number | undefined>(undefined);
   const [allMessages, setAllMessages] = useState<any[]>([]);
 
@@ -67,10 +67,10 @@ export default function Archive() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Reset pagination when category changes
+  // Reset pagination when categories change
   useEffect(() => {
     setCursor(undefined);
-  }, [selectedCategory]);
+  }, [selectedCategories]);
 
   // Fetch categories
   const { data: categories } = trpc.messages.categories.useQuery();
@@ -141,10 +141,19 @@ export default function Archive() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Toggle category selection
+  const toggleCategory = useCallback((categoryName: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(categoryName)
+        ? prev.filter((c) => c !== categoryName)
+        : [...prev, categoryName]
+    );
+  }, []);
+
   // Fetch messages
   const { data, isLoading, isFetching } = trpc.messages.search.useQuery({
     query: searchQuery || undefined,
-    category: selectedCategory || undefined,
+    categories: selectedCategories.length > 0 ? selectedCategories : undefined,
     cursor,
     limit: 20,
   });
@@ -282,38 +291,41 @@ export default function Archive() {
             )}
           </div>
 
-          {/* Category Pills */}
+          {/* Category Pills (multi-select) */}
           <div className="flex flex-wrap gap-2 mb-8">
             <button
-              onClick={() => setSelectedCategory(null)}
+              onClick={() => setSelectedCategories([])}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === null
+                selectedCategories.length === 0
                   ? "bg-primary text-primary-foreground"
                   : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
               }`}
             >
               All
             </button>
-            {categoryList.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.name)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === cat.name
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
-                }`}
-              >
-                {cat.name}
-                <span className="ml-1.5 text-xs opacity-70">({cat.count})</span>
-              </button>
-            ))}
+            {categoryList.map((cat) => {
+              const isSelected = selectedCategories.includes(cat.name);
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => toggleCategory(cat.name)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isSelected
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  {cat.name}
+                  <span className="ml-1.5 text-xs opacity-70">({cat.count})</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Results Count */}
           {!isLoading && (
             <p className="text-sm text-muted-foreground mb-6">
-              {searchQuery || selectedCategory ? (
+              {searchQuery || selectedCategories.length > 0 ? (
                 <>Found {total.toLocaleString()} results</>
               ) : (
                 <>Showing {allMessages.length.toLocaleString()} of {total.toLocaleString()} entries</>
