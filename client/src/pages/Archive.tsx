@@ -5,16 +5,22 @@
  *
  * Features:
  * - Full-text search with 300ms debounce and autocomplete suggestions
- * - Category filtering via pill buttons
+ * - Category filtering via pill buttons (multi-select)
+ * - URL query parameter sync for shareable filtered views
  * - Cursor-based "Load More" pagination
  * - Color-coded category badges
  * - External link cards to source content
  *
  * Data is fetched from the messages/summaries tables via tRPC,
  * automatically excluding entries pending review.
+ *
+ * URL Parameters:
+ * - q: Search query string
+ * - categories: Comma-separated list of category names
  */
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useSearch, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { ExternalLink, Search, Loader2, Rss, X } from "lucide-react";
 import { format } from "date-fns";
@@ -45,11 +51,23 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function Archive() {
-  const [search, setSearch] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  // URL state management
+  const searchString = useSearch();
+  const [, setLocation] = useLocation();
+  const urlParams = useMemo(() => new URLSearchParams(searchString), [searchString]);
+
+  // Parse initial state from URL
+  const initialQuery = urlParams.get("q") || "";
+  const initialCategories = urlParams.get("categories")?.split(",").filter(Boolean) || [];
+
+  const [search, setSearch] = useState(initialQuery);
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
   const [cursor, setCursor] = useState<number | undefined>(undefined);
   const [allMessages, setAllMessages] = useState<any[]>([]);
+
+  // Track if this is initial mount to avoid double URL update
+  const isInitialMount = useRef(true);
 
   // Set page title
   useEffect(() => {
@@ -61,6 +79,32 @@ export default function Archive() {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Sync state to URL when searchQuery or categories change
+  useEffect(() => {
+    // Skip initial mount to avoid replacing URL on load
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (searchQuery) {
+      params.set("q", searchQuery);
+    }
+    if (selectedCategories.length > 0) {
+      params.set("categories", selectedCategories.join(","));
+    }
+
+    const newSearch = params.toString();
+    const newUrl = newSearch ? `/archive?${newSearch}` : "/archive";
+
+    // Only update if URL actually changed
+    const currentUrl = window.location.pathname + window.location.search;
+    if (currentUrl !== newUrl) {
+      setLocation(newUrl, { replace: true });
+    }
+  }, [searchQuery, selectedCategories, setLocation]);
 
   // Debounce search input
   useEffect(() => {
